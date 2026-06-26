@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RSL Strategie">
+<meta name="theme-color" content="#0d1117">
+<title>RSL Strategie</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%230d1117'/%3E%3Ctext x='90' y='118' font-size='90' font-family='Helvetica' font-weight='bold' fill='%2358a6ff' text-anchor='middle'%3ERSL%3C/text%3E%3C/svg%3E">
+<style>
+:root{--bg:#0d1117;--bg2:#161b22;--card:#161b22;--border:#30363d;--txt:#e6edf3;--mut:#8b949e;--accent:#58a6ff;--green:#3fb950;--red:#f85149;--amber:#d29922;--tabh:62px;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;}
+body{padding-bottom:calc(var(--tabh) + env(safe-area-inset-bottom));}
+header{position:sticky;top:0;z-index:20;background:rgba(13,17,23,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;}
+header h1{margin:0;font-size:19px;font-weight:700;letter-spacing:-.3px;}
+header .sub{margin:2px 0 0;font-size:12px;color:var(--mut);}
+.wrap{padding:16px;max-width:680px;margin:0 auto;}
+.view{display:none;animation:fade .25s ease;}
+.view.active{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;}
+.card h2{margin:0 0 12px;font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--mut);font-weight:600;}
+.status-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.status-row:last-child{border-bottom:none;padding-bottom:0;}
+.status-row .lbl{font-size:14px;color:var(--mut);}
+.status-row .val{font-size:15px;font-weight:600;text-align:right;}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:13px;font-weight:600;}
+.badge.green{background:rgba(63,185,80,.15);color:var(--green);}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.dot.green{background:var(--green);box-shadow:0 0 8px var(--green);}
+.pos{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid var(--border);}
+.pos:last-child{border-bottom:none;padding-bottom:0;}
+.pos .rk{width:30px;height:30px;border-radius:9px;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--accent);flex:0 0 auto;}
+.pos .meta{flex:1;min-width:0;}
+.pos .tk{font-size:16px;font-weight:700;}
+.pos .nm{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pos .rt{text-align:right;flex:0 0 auto;}
+.pos .rsl{font-size:16px;font-weight:700;color:var(--green);}
+.pos .pr{font-size:12px;color:var(--mut);}
+.note{font-size:12px;color:var(--mut);line-height:1.5;margin-top:10px;}
+.divrule{background:rgba(88,166,255,.07);border:1px solid rgba(88,166,255,.25);border-radius:10px;padding:11px 13px;font-size:12.5px;color:#b9c4d0;line-height:1.5;margin-top:4px;}
+.rbx{text-align:center;padding:6px 0 2px;}
+.rbx .big{font-size:30px;font-weight:800;color:var(--accent);letter-spacing:-.5px;}
+.rbx .big small{font-size:14px;font-weight:600;color:var(--mut);}
+.rbx .when{font-size:14px;margin-top:4px;}
+.search{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:11px;color:var(--txt);font-size:16px;padding:12px 14px;margin-bottom:12px;outline:none;}
+.search:focus{border-color:var(--accent);}
+.seg{display:flex;gap:6px;margin-bottom:12px;}
+.seg button{flex:1;background:var(--bg2);border:1px solid var(--border);color:var(--mut);font-size:13px;font-weight:600;padding:8px;border-radius:9px;cursor:pointer;}
+.seg button.on{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+.cand{color:var(--green)!important;}
+form label{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px;font-weight:600;}
+form input,form select,form textarea{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--txt);font-size:16px;padding:11px 13px;outline:none;font-family:inherit;}
+form input:focus,form select:focus,form textarea:focus{border-color:var(--accent);}
+form textarea{min-height:70px;resize:vertical;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.btn{width:100%;background:var(--accent);color:#0d1117;border:none;border-radius:11px;font-size:16px;font-weight:700;padding:14px;margin-top:16px;cursor:pointer;}
+.btn.sec{background:var(--bg2);color:var(--txt);border:1px solid var(--border);}
+.jentry{background:var(--bg2);border:1px solid var(--border);border-radius:11px;padding:13px;margin-bottom:10px;}
+.jentry .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.jentry .tk{font-size:16px;font-weight:700;}
+.jentry .dt{font-size:12px;color:var(--mut);}
+.jentry .ty{font-size:11px;font-weight:700;text-transform:uppercase;padding:3px 8px;border-radius:6px;}
+.jentry .ty.kauf{background:rgba(63,185,80,.15);color:var(--green);}
+.jentry .ty.verkauf{background:rgba(248,81,73,.15);color:var(--red);}
+.jentry .det{font-size:13px;color:var(--mut);margin-top:6px;}
+.jentry .nz{font-size:13px;color:#b9c4d0;margin-top:8px;line-height:1.45;}
+.jentry .del{float:right;color:var(--red);background:none;border:none;font-size:18px;cursor:pointer;padding:0 4px;}
+.empty{text-align:center;color:var(--mut);font-size:14px;padding:30px 0;}
+.kpis{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 10px;text-align:center;}
+.kpi .n{font-size:20px;font-weight:700;}
+.kpi .l{font-size:11px;color:var(--mut);margin-top:3px;}
+.muted{color:var(--mut);font-size:12px;}
+/* Performance-Karte */
+.perf-hd{text-align:center;padding:4px 0 10px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+.perf-hd .pct{font-size:34px;font-weight:800;letter-spacing:-1px;}
+.perf-hd .eur{font-size:14px;font-weight:600;margin-top:2px;}
+.perf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.perf-grid .b{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;}
+.perf-grid .b .v{font-size:16px;font-weight:700;}
+.perf-grid .b .l{font-size:11px;color:var(--mut);margin-top:2px;}
+.prow{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:14px;}
+.prow:last-child{border-bottom:none;padding-bottom:0;}
+.prow .l{color:var(--mut);}
+.up{color:var(--green);}.down{color:var(--red);}
+/* Kurzanleitung */
+.guide-step{display:flex;gap:13px;padding:13px 0;border-bottom:1px solid var(--border);}
+.guide-step:last-child{border-bottom:none;padding-bottom:0;}
+.guide-step .num{width:28px;height:28px;border-radius:8px;background:rgba(88,166,255,.15);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:0 0 auto;}
+.guide-step .gt{font-size:15px;font-weight:700;margin-bottom:2px;}
+.guide-step .gd{font-size:13.5px;color:#b9c4d0;line-height:1.5;}
+.rule{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.5;padding:8px 0;}
+.rule .ic{flex:0 0 auto;font-size:16px;line-height:1.4;}
+.benchbar{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.benchbar .b{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
+.benchbar .b .v{font-size:19px;font-weight:800;}
+.benchbar .b .l{font-size:11px;color:var(--mut);margin-top:2px;}
+/* Doku */
+.doc{font-size:15px;line-height:1.6;color:#c9d1d9;}
+.doc h1{font-size:21px;color:var(--txt);margin:26px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--accent);}
+.doc h1:first-child{margin-top:2px;}
+.doc h2{font-size:17px;color:var(--accent);margin:22px 0 8px;text-transform:none;letter-spacing:0;}
+.doc h3{font-size:15px;color:var(--txt);margin:18px 0 6px;}
+.doc p{margin:8px 0;}.doc ul,.doc ol{padding-left:20px;margin:8px 0;}.doc li{margin:4px 0;}
+.doc strong{color:var(--txt);}
+.doc code{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:1px 5px;font-size:13px;}
+.doc hr{border:none;border-top:1px solid var(--border);margin:18px 0;}
+.doc blockquote{margin:12px 0;padding:11px 14px;background:rgba(88,166,255,.08);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;color:#b9c4d0;}
+.doc blockquote p{margin:0;}
+.doc .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:12px 0;border:1px solid var(--border);border-radius:10px;}
+.doc table{border-collapse:collapse;width:100%;font-size:13px;min-width:340px;}
+.doc th,.doc td{padding:9px 11px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;}
+.doc th{background:var(--bg2);color:var(--mut);font-weight:600;}
+.doc tr:last-child td{border-bottom:none;}
+nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:30;display:flex;background:rgba(13,17,23,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--border);height:var(--tabh);padding-bottom:env(safe-area-inset-bottom);}
+nav.tabs button{flex:1;background:none;border:none;color:var(--mut);font-size:10.5px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding-top:7px;}
+nav.tabs button.on{color:var(--accent);}
+nav.tabs svg{width:22px;height:22px;}
+</style>
+</head>
+<body>
+<header>
+ <h1 id="hdr-title">Aktuelles Signal</h1>
+ <p class="sub">B5-Buffer · Datenbasis: Wochenschluss Fr. 12.06.2026</p>
+</header>
+
+<!-- ===== SIGNAL ===== -->
+<section class="view active" id="v-signal"><div class="wrap">
+ <div class="card">
+  <h2>Marktstatus</h2>
+  <div class="status-row"><span class="lbl">Schock-Filter</span><span class="val"><span class="badge green"><span class="dot green"></span>Inaktiv</span></span></div>
+  <div class="status-row"><span class="lbl">S&P 500 · 5-Tages-Rendite</span><span class="val" style="color:var(--green)">+0,65 %</span></div>
+  <div class="status-row"><span class="lbl">Schwelle Cash-Exit</span><span class="val muted">&lt; −4,0 %</span></div>
+  <div class="status-row"><span class="lbl">S&P 500 Schlusskurs</span><span class="val">7.431,46</span></div>
+  <div class="status-row"><span class="lbl">Status</span><span class="val" style="color:var(--green)">Voll investiert</span></div>
+ </div>
+ <div class="card">
+  <h2>Top-3-Empfehlung · sektor-diversifiziert</h2>
+  <div class="pos"><div class="rk">1</div><div class="meta"><div class="tk">SNDK</div><div class="nm">Sandisk · Information Technology</div></div><div class="rt"><div class="rsl">2,344</div><div class="pr">1.980,10 $</div></div></div>
+  <div class="pos"><div class="rk">2</div><div class="meta"><div class="tk">DELL</div><div class="nm">Dell Technologies · Information Technology</div></div><div class="rt"><div class="rsl">2,072</div><div class="pr">395,57 $</div></div></div>
+  <div class="pos"><div class="rk">3</div><div class="meta"><div class="tk">HUM</div><div class="nm">Humana · Health Care</div></div><div class="rt"><div class="rsl">1,599</div><div class="pr">379,22 $</div></div></div>
+  <div class="divrule"><b>Sektor-Regel angewandt:</b> Reine RSL-Top-3 wären SNDK, DELL, MU – alle Information Technology. MU (Rang 3) wird durch HUM (bester Nicht-IT-Titel, Health Care) ersetzt. Gleichgewichtet ~33,3 % je Position.</div>
+ </div>
+ <div class="card">
+  <h2>Nächstes Rebalancing</h2>
+  <div class="rbx"><div class="big" id="cd-num">–</div><div class="when">Freitag, 26.06.2026 · 20:00 Uhr</div></div>
+  <p class="note"><b>Termin-Regel:</b> am letzten Handels-Freitag jedes Quartals (Mär/Jun/Sep/Dez), Beginn 20:00 Uhr. Buffer-Regel: Position halten, solange Rang ≤ 5. Bei grüner Regime-Ampel optional wöchentliche Prüfung.</p>
+ </div>
+</div></section>
+
+<!-- ===== RANKING ===== -->
+<section class="view" id="v-ranking"><div class="wrap">
+ <input class="search" id="rsearch" type="search" placeholder="Ticker oder Sektor suchen …" autocomplete="off">
+ <div class="seg" id="rseg"><button data-n="20" class="on">Top 20</button><button data-n="50">Top 50</button><button data-n="100">Top 100</button><button data-n="9999">Alle</button></div>
+ <div class="card" style="padding:8px 14px;"><div id="rlist"></div></div>
+ <p class="muted" style="text-align:center" id="rcount"></p>
+</div></section>
+
+<!-- ===== JOURNAL ===== -->
+<section class="view" id="v-journal"><div class="wrap">
+ <div class="card">
+  <h2>Performance · Depot</h2>
+  <div id="perf"></div>
+  <p class="note">Aktuelle Kurse als Momentaufnahme (Stand 12.06.2026, EUR/USD 1,1709) — nicht live. Berechnet aus deinen Kauf-/Verkauf-Einträgen; nur Titel im S&P-500-Universum werden bewertet.</p>
+ </div>
+ <div class="kpis">
+  <div class="kpi"><div class="n" id="k-count">0</div><div class="l">Einträge</div></div>
+  <div class="kpi"><div class="n" id="k-open">0</div><div class="l">Käufe</div></div>
+  <div class="kpi"><div class="n" id="k-last">–</div><div class="l">Letzter</div></div>
+ </div>
+ <div class="card">
+  <h2>Neuer Eintrag</h2>
+  <form id="jform" onsubmit="return false;">
+   <div class="grid2"><div><label>Datum</label><input type="date" id="f-datum"></div><div><label>Typ</label><select id="f-typ"><option value="kauf">Kauf</option><option value="verkauf">Verkauf</option><option value="notiz">Notiz</option></select></div></div>
+   <div class="grid2"><div><label>Symbol</label><input type="text" id="f-symbol" placeholder="z.B. SNDK" style="text-transform:uppercase"></div><div><label>Anteile</label><input type="number" id="f-anteile" step="0.0001" placeholder="0"></div></div>
+   <div class="grid2"><div><label>Kurs (EUR)</label><input type="number" id="f-kurs" step="0.01" placeholder="0"></div><div><label>Gebühr (EUR)</label><input type="number" id="f-fee" step="0.01" placeholder="1.00"></div></div>
+   <label>Notiz</label><textarea id="f-notiz" placeholder="Warum dieser Trade? Welches Setup? Was nächstes Mal anders?"></textarea>
+   <button class="btn" id="jsave">Eintrag speichern</button>
+  </form>
+ </div>
+ <div class="card"><h2>Verlauf</h2><div id="jlist"></div><button class="btn sec" id="jexport">Als CSV exportieren</button></div>
+</div></section>
+
+<!-- ===== KURZANLEITUNG ===== -->
+<section class="view" id="v-kurz"><div class="wrap">
+ <div class="card">
+  <h2>B5-Buffer in 60 Sekunden</h2>
+  <p class="note" style="margin-top:0">Kaufe die stärksten S&P-500-Aktien und lass die Gewinner laufen. Relative Stärke = <b>RSL = Kurs ÷ SMA(26 Wochen)</b>.</p>
+  <div class="guide-step"><div class="num">1</div><div><div class="gt">Kaufen</div><div class="gd">Beim Rebalancing die <b>Top 3</b> nach RSL kaufen, gleichgewichtet (~33 % je Titel). <b>Max. 2 Titel je Sektor</b> — ist der 3. Platz derselbe Sektor, nimm den nächstbesten aus einem anderen.</div></div></div>
+  <div class="guide-step"><div class="num">2</div><div><div class="gt">Halten</div><div class="gd">Eine Position bleibt im Depot, <b>solange ihr Rang ≤ 5</b> ist (Buffer-Zone). Gewinner werden <b>nicht getrimmt</b> — laufen lassen.</div></div></div>
+  <div class="guide-step"><div class="num">3</div><div><div class="gt">Verkaufen</div><div class="gd">Fällt eine Position <b>unter Rang 5</b>, wird sie verkauft und durch den bestplatzierten freien Titel ersetzt — beim nächsten Rebalancing.</div></div></div>
+  <div class="guide-step"><div class="num">4</div><div><div class="gt">Prüfen</div><div class="gd">Nur am <b>letzten Handels-Freitag im Quartal um 20:00 Uhr</b> (Mär/Jun/Sep/Dez). Bei grüner Regime-Ampel optional wöchentlich. Sonst: nichts tun.</div></div></div>
+  <div class="guide-step"><div class="num">5</div><div><div class="gt">Notbremse</div><div class="gd"><b>Schock-Filter:</b> fällt der S&P 500 <b>mehr als 4 % in 5 Handelstagen</b>, sofort <b>alles in Cash</b>. Wiedereinstieg, sobald die 5-Tages-Rendite wieder &gt; 0 % ist.</div></div></div>
+ </div>
+ <div class="card">
+  <h2>Merksätze</h2>
+  <div class="rule"><span class="ic">📈</span><div><b>Momentum braucht Laufzeit.</b> Nicht öfter als nötig umschichten — häufiges Rebalancing kostet Rendite.</div></div>
+  <div class="rule"><span class="ic">✋</span><div><b>Nicht in Panik verkaufen.</b> Drawdowns von −23 % bis −34 % sind historisch normal; die Strategie hat sich immer erholt.</div></div>
+  <div class="rule"><span class="ic">🎯</span><div><b>Diszipliniert bleiben.</b> Kaufen/Verkaufen nur nach Regel und Termin — keine Bauchentscheidungen.</div></div>
+  <div class="rule"><span class="ic">🛡️</span><div><b>Filter ernst nehmen.</b> Der Schock-Filter ist die wichtigste Absicherung — er begrenzt große Verluste.</div></div>
+ </div>
+ <div class="card">
+  <h2>Erwartung · Backtest 2016–2026</h2>
+  <div class="benchbar">
+   <div class="b"><div class="v up">~70 %</div><div class="l">CAGR B5-Buffer</div></div>
+   <div class="b"><div class="v">~13,5 %</div><div class="l">CAGR S&P 500</div></div>
+   <div class="b"><div class="v" style="color:var(--amber)">−34 %</div><div class="l">Max. Drawdown</div></div>
+   <div class="b"><div class="v">1,66</div><div class="l">Sharpe-Ratio</div></div>
+  </div>
+  <p class="note">Historische Backtest-Werte mit Schock-Filter, TOP-5-Basis (Survivorship-Bias dokumentiert). Keine Garantie für die Zukunft — Details im Doku-Tab.</p>
+ </div>
+</div></section>
+
+<!-- ===== DOKU ===== -->
+<section class="view" id="v-doku"><div class="wrap"><div class="card"><div class="doc"><h1>B5-Buffer — Strategie</h1>
+<p>Die aktiv gehandelte Variante der RSL-Strategie ("Relative Stärke nach Levy").</p>
+<h2>Kernregeln</h2>
+<table>
+<thead>
+<tr>
+<th>Regel</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kennzahl</td>
+<td><strong>RSL = Kurs ÷ SMA(26 Wochen)</strong> auf den S&amp;P 500</td>
+</tr>
+<tr>
+<td>Auswahl</td>
+<td><strong>Top 3</strong> nach RSL, gleichgewichtet (~33,3 % je Position)</td>
+</tr>
+<tr>
+<td>Buffer-Regel</td>
+<td>Position halten, <strong>solange Rang ≤ 5</strong>; fällt sie darunter → verkaufen, durch bestplatzierten freien Titel ersetzen</td>
+</tr>
+<tr>
+<td>Sektor-Cap</td>
+<td><strong>höchstens 2 Titel je Sektor</strong> in den Top-3</td>
+</tr>
+<tr>
+<td>Mindest-RSL</td>
+<td>≥ 1,00</td>
+</tr>
+<tr>
+<td>Schock-Filter</td>
+<td>S&amp;P 500 <strong>−4 % in 5 Handelstagen</strong> → alle Positionen sofort in Cash; Wiedereinstieg, sobald 5T-Rendite &gt; 0 %</td>
+</tr>
+</tbody>
+</table>
+<h2>Rebalancing-Termin</h2>
+<blockquote>
+<p><strong>Am letzten Handels-Freitag jedes Quartals</strong> (März / Juni / September / Dezember), <strong>Beginn 20:00 Uhr</strong>.</p>
+</blockquote>
+<p>Bei grüner Regime-Ampel (Dispersion ≥ 0,45) optional wöchentliche Prüfung. Gewinner werden nicht getrimmt — "Gewinner laufen lassen".</p>
+<hr />
+<h1>Backtest-Dokumentation</h1>
+<h1>RSL-Strategie – Gesprächszusammenfassung</h1>
+<p><strong>Datum:</strong> April 2026<br />
+<strong>Ordner Hauptbacktest:</strong> <code>Backtestung sma 40 Days/</code></p>
+<hr />
+<h2>1. Die RSL-Strategie (Grundversion)</h2>
+<p><strong>Formel:</strong> RSL = Aktienkurs ÷ SMA-130</p>
+<p><strong>Parameter:</strong>
+| Parameter | Wert |
+|---|---|
+| SMA-Periode | 130 Handelstage |
+| Anzahl Positionen | TOP-5 |
+| Mindest-RSL | ≥ 1,00 |
+| Rebalancing-Intervall | alle 52 Handelstage |
+| Transaktionskosten | 0,1 % je Trade |
+| Schock-Filter | S&amp;P 500 −4 % über 5 Handelstage → alles verkaufen |
+| Wiedereinstieg | sobald 5T-Rendite S&amp;P &gt; 0 % |</p>
+<p><strong>Datenbasis:</strong> S&amp;P 500 Bestandteile, Zeitraum 2016–2026</p>
+<hr />
+<h2>2. Gettex-Integration (Live-Kurse)</h2>
+<ul>
+<li>Live-Kurse kommen vom lokalen Server <code>server.py</code> (Port 5050)</li>
+<li>Strategie: <code>yfinance</code> mit <code>.MU</code>-Suffix → Börse München = Gettex → direkt in EUR</li>
+<li>Fallback: US-Kurs ÷ EUR/USD für Symbole ohne München-Notiz</li>
+<li>JSON-Antwort enthält <code>_sources: {"SYM": "MU"|"US"}</code> → Badge im Journal</li>
+</ul>
+<hr />
+<h2>3. Backtests im Überblick</h2>
+<h3>3.1 Grundbacktest (Standardstrategie)</h3>
+<ul>
+<li><strong>Startkapital:</strong> $100.000</li>
+<li><strong>Ergebnis mit Schock-Filter:</strong> ~$15,8 Mio. | CAGR ~70 % | MaxDD ~−34 %</li>
+<li><strong>S&amp;P 500:</strong> ~$33.000 | CAGR 13,5 %</li>
+</ul>
+<hr />
+<h3>3.2 Kein Rebalancing (Buy &amp; Hold TOP-5)</h3>
+<p><strong>Datei:</strong> <code>backtest_kein_rebalancing.py</code></p>
+<table>
+<thead>
+<tr>
+<th>Strategie</th>
+<th>Endwert</th>
+<th>CAGR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Buy-Once (kein Rebalancing)</td>
+<td>~$3,5 Mio.</td>
+<td>~35 %</td>
+</tr>
+<tr>
+<td>Standard RSL 52T</td>
+<td>~$15,8 Mio.</td>
+<td>~66 %</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Fazit:</strong> Rebalancing bringt massiv mehr, weil Momentum Zeit braucht zu rotieren.<br />
+<strong>Erste TOP-5 (19.10.2016):</strong> TPL, LITE, NFLX, NVDA, WMB</p>
+<hr />
+<h3>3.3 Wöchentliches partielles Rebalancing</h3>
+<p><strong>Datei:</strong> <code>backtest_wochentlich_partiell.py</code></p>
+<table>
+<thead>
+<tr>
+<th>Strategie</th>
+<th>Endwert</th>
+<th>CAGR</th>
+<th>Trades</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Wöchentlich partiell (ohne Filter)</td>
+<td>$4.640.166</td>
+<td>49,75 %</td>
+<td>1.505</td>
+</tr>
+<tr>
+<td>Standard 52T</td>
+<td>$15.846.453</td>
+<td>70,12 %</td>
+<td>~70</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Fazit:</strong> Häufigeres Rebalancing schadet massiv — Momentum braucht Laufzeit.</p>
+<hr />
+<h3>3.4 TOP-5 vs. TOP-10</h3>
+<table>
+<thead>
+<tr>
+<th>Strategie</th>
+<th>Endwert</th>
+<th>CAGR</th>
+<th>MaxDD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TOP-5</td>
+<td>~$15,8 Mio.</td>
+<td>~70 %</td>
+<td>−34 %</td>
+</tr>
+<tr>
+<td>TOP-10</td>
+<td>$6.756.198</td>
+<td>55,71 %</td>
+<td>−25,15 %</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Fazit:</strong> TOP-5 gewinnt bei CAGR, TOP-10 hat geringeren Drawdown.<br />
+<strong>Entscheidung: Wir bleiben bei TOP-5.</strong></p>
+<hr />
+<h3>3.5 Peak-Einstieg (Worst-Case-Analyse)</h3>
+<p>Einstieg jeweils am historischen Markt-Höchststand:</p>
+<table>
+<thead>
+<tr>
+<th>Einstieg</th>
+<th>MaxDD RSL</th>
+<th>Recovery</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Okt 2018</td>
+<td>−31,0 %</td>
+<td>499 Tage</td>
+</tr>
+<tr>
+<td>Feb 2020</td>
+<td>−27,4 %</td>
+<td>56 Tage</td>
+</tr>
+<tr>
+<td>Jan 2022</td>
+<td>−27,4 %</td>
+<td>1 Tag</td>
+</tr>
+<tr>
+<td>Jul 2023</td>
+<td>−27,4 %</td>
+<td>1 Tag</td>
+</tr>
+<tr>
+<td>Feb 2025</td>
+<td>−23,2 %</td>
+<td>202 Tage</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Fazit:</strong> RSL erholt sich immer, MaxDD begrenzt auf ca. −23 % bis −31 %.</p>
+<hr />
+<h3>3.6 Sparplan-Analyse ($100/Monat auf $100.000)</h3>
+<ul>
+<li>$100/Monat = nur 0,1 % des Startkapitals → <strong>kein messbarer Effekt</strong></li>
+<li>Endwert kaum verschieden (z.B. Okt 2018: $6.203.373 vs. $6.210.047)</li>
+<li><strong>Fazit:</strong> Mindestens $500–$1.000/Monat nötig für spürbaren DCA-Effekt</li>
+</ul>
+<hr />
+<h3>3.7 Startkapital $5.000 ($1.000 pro Aktie)</h3>
+<table>
+<thead>
+<tr>
+<th>Strategie</th>
+<th>Endwert</th>
+<th>CAGR</th>
+<th>Faktor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RSL 1× ohne Filter</td>
+<td>$234.020</td>
+<td>49,9 %</td>
+<td>47×</td>
+</tr>
+<tr>
+<td>RSL 1× mit Filter</td>
+<td>$272.210</td>
+<td>52,3 %</td>
+<td>54×</td>
+</tr>
+<tr>
+<td>S&amp;P 500</td>
+<td>$16.577</td>
+<td>13,4 %</td>
+<td>3×</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>3.8 Sparplan $5.000 + $100/Monat (114 Monate)</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Ohne Sparplan</th>
+<th>Mit $100/Monat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Eingezahlt</td>
+<td>$5.000</td>
+<td>$16.400</td>
+</tr>
+<tr>
+<td>Endwert</td>
+<td>$272.210</td>
+<td>$473.026</td>
+</tr>
+<tr>
+<td>CAGR</td>
+<td>52,3 %</td>
+<td>61,4 %</td>
+</tr>
+<tr>
+<td>MaxDD</td>
+<td>−38,8 %</td>
+<td>−36,5 %</td>
+</tr>
+<tr>
+<td>Sharpe</td>
+<td>1,46</td>
+<td>1,63</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Fazit:</strong> Bei $5k Basis ist $100/Monat (= 2 % Startkapital) sehr wirksam.<br />
+DCA-Effekt senkt Drawdown und steigert CAGR deutlich.</p>
+<hr />
+<h3>3.9 Hebelvergleich 1× / 2× / 3×</h3>
+<p><strong>Startkapital: $5.000</strong></p>
+<table>
+<thead>
+<tr>
+<th>Strategie</th>
+<th>Endwert</th>
+<th>CAGR</th>
+<th>MaxDD</th>
+<th>Faktor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1× kein Filter</td>
+<td>$234.020</td>
+<td>49,9 %</td>
+<td>−35,1 %</td>
+<td>47×</td>
+</tr>
+<tr>
+<td>1× + Filter</td>
+<td>$272.210</td>
+<td>52,3 %</td>
+<td>−38,8 %</td>
+<td>54×</td>
+</tr>
+<tr>
+<td>2× kein Filter</td>
+<td>$2.966.072</td>
+<td>95,9 %</td>
+<td>−58,4 %</td>
+<td>593×</td>
+</tr>
+<tr>
+<td><strong>2× + Filter</strong></td>
+<td><strong>$4.741.289</strong></td>
+<td><strong>105,8 %</strong></td>
+<td><strong>−65,0 %</strong></td>
+<td><strong>948×</strong></td>
+</tr>
+<tr>
+<td>3× kein Filter</td>
+<td>$7.421.291</td>
+<td>115,7 %</td>
+<td>−73,7 %</td>
+<td>1.484×</td>
+</tr>
+<tr>
+<td>3× + Filter</td>
+<td>$21.558.283</td>
+<td>141,3 %</td>
+<td>−80,8 %</td>
+<td>4.312×</td>
+</tr>
+<tr>
+<td>S&amp;P 500</td>
+<td>$16.577</td>
+<td>13,4 %</td>
+<td>−33,9 %</td>
+<td>3×</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Hebel-Modell:</strong> Tagesrendite = Hebel × Aktienrendite − Finanzierungskosten<br />
+(2×: 1,5 %/Jahr | 3×: 3,0 %/Jahr)<br />
+<strong>Warnung:</strong> Volatility Decay bei gehebelten Einzelaktien extrem.<br />
+−35 % Underlying → 2× = −70 %, 3× = Totalverlust möglich.</p>
+<hr />
+<h3>3.10 RSL 2× Hebel + Filter (eigenständige Datei)</h3>
+<p><strong>Datei:</strong> <code>backtest_2x_hebel.py</code><br />
+<strong>Nach Bug-Fix (Reihenfolge: erst verkaufen, dann kaufen):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Strategie</th>
+<th>Endwert</th>
+<th>CAGR</th>
+<th>MaxDD</th>
+<th>Calmar</th>
+<th>Faktor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RSL 1× + Filter</td>
+<td>$272.210</td>
+<td>52,3 %</td>
+<td>−38,8 %</td>
+<td>1,35</td>
+<td>54×</td>
+</tr>
+<tr>
+<td><strong>RSL 2× + Filter</strong></td>
+<td><strong>$7.748.075</strong></td>
+<td><strong>116,7 %</strong></td>
+<td><strong>−72,4 %</strong></td>
+<td><strong>1,61</strong></td>
+<td><strong>1.550×</strong></td>
+</tr>
+<tr>
+<td>S&amp;P 500</td>
+<td>$16.577</td>
+<td>13,4 %</td>
+<td>−33,9 %</td>
+<td>0,40</td>
+<td>3×</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Trade-Übersicht (689 gesamt):</strong>
+- 324 × KAUF
+- 174 × VERKAUF (Abgänger aus TOP-5)
+- 130 × VERKAUF (Schock-Filter)
+- 61 × TEILVERKAUF (Rebalancing – Übergewichter trimmen)</p>
+<hr />
+<h2>4. Erstellte Dateien</h2>
+<h3>Python-Backtests</h3>
+<table>
+<thead>
+<tr>
+<th>Datei</th>
+<th>Inhalt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backtest_kein_rebalancing.py</code></td>
+<td>Buy &amp; Hold vs. Standard RSL</td>
+</tr>
+<tr>
+<td><code>backtest_wochentlich_partiell.py</code></td>
+<td>Wöchentliche Rotation</td>
+</tr>
+<tr>
+<td><code>backtest_punkt1_vergleiche.py</code></td>
+<td>TOP-N Vergleiche</td>
+</tr>
+<tr>
+<td><code>backtest_2x_hebel.py</code></td>
+<td><strong>2× Hebel mit Schock-Filter (eigenständig)</strong></td>
+</tr>
+</tbody>
+</table>
+<h3>Output-Dateien</h3>
+<table>
+<thead>
+<tr>
+<th>Datei</th>
+<th>Inhalt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>2x_hebel_chart.png</code></td>
+<td>3-Panel-Chart: Depotwert / Drawdown / Roll. Jahresrendite</td>
+</tr>
+<tr>
+<td><code>2x_hebel_ergebnisse.csv</code></td>
+<td>Kennzahlen aller 3 Strategien</td>
+</tr>
+<tr>
+<td><code>2x_hebel_trades.csv</code></td>
+<td>Alle 689 Einzeltrades</td>
+</tr>
+<tr>
+<td><code>startkapital_5k_chart.png</code></td>
+<td>$5k Basis-Vergleich</td>
+</tr>
+<tr>
+<td><code>sparplan_5k_vergleich_chart.png</code></td>
+<td>DCA-Effekt bei $5k</td>
+</tr>
+<tr>
+<td><code>hebel_vergleich_chart.png</code></td>
+<td>1× / 2× / 3× Vergleich</td>
+</tr>
+<tr>
+<td><code>peak_einstieg_chart.png</code></td>
+<td>Worst-Case-Einstiegsanalyse</td>
+</tr>
+</tbody>
+</table>
+<h3>Weitere Dateien</h3>
+<table>
+<thead>
+<tr>
+<th>Datei</th>
+<th>Inhalt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>RSL_Strategie.xlsx</code></td>
+<td>Excel-Dokument mit 7 Tabs (dark theme)</td>
+</tr>
+<tr>
+<td><code>server.py</code></td>
+<td>Lokaler Kursserver (Port 5050, Gettex + yfinance)</td>
+</tr>
+<tr>
+<td><code>trading_journal.html</code></td>
+<td>EUR-only Trading-Journal</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>5. Wichtigste Erkenntnisse</h2>
+<ol>
+<li><strong>Rebalancing-Intervall ist entscheidend:</strong> 52T &gt;&gt; wöchentlich (Momentum braucht Laufzeit)</li>
+<li><strong>TOP-5 schlägt TOP-10</strong> bei CAGR deutlich (70% vs. 56%)</li>
+<li><strong>Schock-Filter lohnt immer</strong> – besonders bei Hebel (Calmar-Ratio steigt)</li>
+<li><strong>Sparplan wirkt erst ab ca. 1–2 % des Startkapitals pro Monat</strong></li>
+<li><strong>2× Hebel ist die beste Risiko/Ertrags-Balance</strong> (Calmar 1,61 &gt; 1× Calmar 1,35)</li>
+<li><strong>3× Hebel</strong> ist theoretisch fantastisch, aber −72–81 % MaxDD in der Praxis kaum haltbar</li>
+<li><strong>Peak-Einstieg:</strong> RSL erholt sich immer, MaxDD begrenzt auf −23 % bis −31 %</li>
+</ol>
+<hr />
+<h2>6. Nächste mögliche Schritte (Knockout / Optionen)</h2>
+<p>Diese Zusammenfassung wurde in den Ordner <strong>Backtesting Knockout</strong> und <strong>Backtesting Optoinen</strong> gespeichert, da die RSL-Strategie als Basis für folgende Erweiterungen dienen kann:</p>
+<ul>
+<li><strong>Knockout-Zertifikate</strong> auf die TOP-5 RSL-Aktien (fixer Hebel, kein Decay-Problem)</li>
+<li><strong>Call-Optionen</strong> auf RSL-Momentum-Aktien (Hebel mit begrenztem Verlustrisiko)</li>
+<li><strong>LEAPS</strong> (langfristige Optionen) auf RSL-Aktien als Hebelersatz ohne täglichen Decay</li>
+</ul>
+<p><strong>Vorteil gegenüber täglichem Hebel:</strong>
+- Kein Volatility Decay bei Knockout/Optionen (Hebel wirkt auf Gesamtlaufzeit)
+- Verlustrisiko auf Einsatz begrenzt (kein Margin Call)
+- Bessere Kostenstruktur bei längerem Haltezeitraum</p>
+<hr />
+<p><em>Erstellt mit Claude (Anthropic) | RSL-Strategie Backtesting Session April 2026</em></p></div></div></div></section>
+
+<nav class="tabs">
+ <button class="on" data-v="signal" data-t="Aktuelles Signal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Signal</button>
+ <button data-v="ranking" data-t="RSL-Ranking"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="4" y2="10"/><line x1="10" y1="20" x2="10" y2="4"/><line x1="16" y1="20" x2="16" y2="14"/><line x1="22" y1="20" x2="2" y2="20"/></svg>Ranking</button>
+ <button data-v="journal" data-t="Trading-Journal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Journal</button>
+ <button data-v="kurz" data-t="Kurzanleitung"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Kurz</button>
+ <button data-v="doku" data-t="Dokumentation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Doku</button>
+</nav>
+
+<script>
+const RANKING = [{"sym":"SNDK","sek":"Information Technology","sub":"Technology Hardware, Storage & Peripherals","preis":1881.51,"rsl26":2.3936,"rsl40":3.3396},{"sym":"DELL","sek":"Information Technology","sub":"Technology Hardware, Storage & Peripherals","preis":391.45,"rsl26":2.1627,"rsl40":2.3597},{"sym":"MU","sek":"Information Technology","sub":"Semiconductors","preis":995.87,"rsl26":2.0853,"rsl40":2.6398},{"sym":"INTC","sek":"Information Technology","sub":"Semiconductors","preis":116.96,"rsl26":1.8487,"rsl40":2.2067},{"sym":"STX","sek":"Information Technology","sub":"Technology Hardware, Storage & Peripherals","preis":868.09,"rsl26":1.768,"rsl40":2.1716},{"sym":"AMD","sek":"Information Technology","sub":"Semiconductors","preis":488.45,"rsl26":1.7577,"rsl40":1.9367},{"sym":"HPE","sek":"Information Technology","sub":"Technology Hardware, Storage & Peripherals","preis":46.8,"rsl26":1.7528,"rsl40":1.8365},{"sym":"WDC","sek":"Information Technology","sub":"Technology Hardware, Storage & Peripherals","preis":529.29,"rsl26":1.661,"rsl40":2.1071},{"sym":"DDOG","sek":"Information Technology","sub":"Application Software","preis":234.24,"rsl26":1.6021,"rsl40":1.5713},{"sym":"FTNT","sek":"Information Technology","sub":"Systems Software","preis":145.06,"rsl26":1.5893,"rsl40":1.6448},{"sym":"HUM","sek":"Health Care","sub":"Managed Health Care","preis":368.69,"rsl26":1.5712,"rsl40":1.4998},{"sym":"AMAT","sek":"Information Technology","sub":"Semiconductor Materials & Equipment","preis":552.64,"rsl26":1.5425,"rsl40":1.8026},{"sym":"KLAC","sek":"Information Technology","sub":"Semiconductor Materials & Equipment","preis":241.164,"rsl26":1.5324,"rsl40":1.7218},{"sym":"ON","sek":"Information Technology","sub":"Semiconductors","preis":115.96,"rsl26":1.5262,"rsl40":1.7362},{"sym":"LRCX","sek":"Information Technology","sub":"Semiconductor Materials & Equipment","preis":362.52,"rsl26":1.522,"rsl40":1.7864},{"sym":"PANW","sek":"Information Technology","sub":"Systems Software","preis":279.53,"rsl26":1.4837,"rsl40":1.4425},{"sym":"CRWD","sek":"Information Technology","sub":"Systems Software","preis":691.53,"rsl26":1.4477,"rsl40":1.4321},{"sym":"NTAP","sek":"Information Technology","sub":"Technology Hardware, Storage & Peripherals","preis":160.47,"rsl26":1.4384,"rsl40":1.4215},{"sym":"CNC","sek":"Health Care","sub":"Managed Health Care","preis":63.54,"rsl26":1.4222,"rsl40":1.5418},{"sym":"STLD","sek":"Materials","sub":"Steel","preis":279.55,"rsl26":1.4093,"rsl40":1.5536},{"sym":"CSCO","sek":"Information Technology","sub":"Communications Equipment","preis":121.83,"rsl26":1.405,"rsl40":1.507},{"sym":"DVA","sek":"Health Care","sub":"Health Care Services","preis":203.83,"rsl26":1.3798,"rsl40":1.4504},{"sym":"NUE","sek":"Materials","sub":"Steel","preis":260.9,"rsl26":1.3703,"rsl40":1.5022},{"sym":"COHR","sek":"Information Technology","sub":"Electronic Components","preis":363.58,"rsl26":1.3621,"rsl40":1.6799},{"sym":"LITE","sek":"Information Technology","sub":"Communications Equipment","preis":889.59,"rsl26":1.3578,"rsl40":1.8032},{"sym":"JBL","sek":"Information Technology","sub":"Electronic Manufacturing Services","preis":376.89,"rsl26":1.3399,"rsl40":1.4705},{"sym":"TXN","sek":"Information Technology","sub":"Semiconductors","preis":297.1,"rsl26":1.3265,"rsl40":1.4435},{"sym":"CASY","sek":"Consumer Staples","sub":"Food Retail","preis":916.28,"rsl26":1.3193,"rsl40":1.43},{"sym":"FFIV","sek":"Information Technology","sub":"Communications Equipment","preis":393.84,"rsl26":1.3087,"rsl40":1.3241},{"sym":"FIX","sek":"Industrials","sub":"Construction & Engineering","preis":1843.42,"rsl26":1.2966,"rsl40":1.5085},{"sym":"MPWR","sek":"Information Technology","sub":"Semiconductors","preis":1589.55,"rsl26":1.2919,"rsl40":1.4127},{"sym":"GLW","sek":"Information Technology","sub":"Electronic Components","preis":176.55,"rsl26":1.2892,"rsl40":1.5046},{"sym":"ODFL","sek":"Industrials","sub":"Cargo Ground Transportation","preis":247.76,"rsl26":1.2875,"rsl40":1.4237},{"sym":"JBHT","sek":"Industrials","sub":"Cargo Ground Transportation","preis":289.14,"rsl26":1.2855,"rsl40":1.4487},{"sym":"TER","sek":"Information Technology","sub":"Semiconductor Materials & Equipment","preis":381.4,"rsl26":1.2756,"rsl40":1.552},{"sym":"NXPI","sek":"Information Technology","sub":"Semiconductors","preis":302.55,"rsl26":1.26,"rsl40":1.3111},{"sym":"MGM","sek":"Consumer Discretionary","sub":"Casinos & Gaming","preis":47.22,"rsl26":1.2593,"rsl40":1.3014},{"sym":"CVS","sek":"Health Care","sub":"Health Care Services","preis":100.48,"rsl26":1.2537,"rsl40":1.2795},{"sym":"GNRC","sek":"Industrials","sub":"Electrical Components & Equipment","preis":257.33,"rsl26":1.2508,"rsl40":1.3296},{"sym":"UNH","sek":"Health Care","sub":"Managed Health Care","preis":405.55,"rsl26":1.2451,"rsl40":1.2348},{"sym":"QCOM","sek":"Information Technology","sub":"Semiconductors","preis":202.96,"rsl26":1.2433,"rsl40":1.2391},{"sym":"URI","sek":"Industrials","sub":"Trading Companies & Distributors","preis":1068.49,"rsl26":1.2375,"rsl40":1.216},{"sym":"HST","sek":"Real Estate","sub":"Hotel & Resort REITs","preis":24.34,"rsl26":1.2298,"rsl40":1.3057},{"sym":"AKAM","sek":"Information Technology","sub":"Internet Services & Infrastructure","preis":132.46,"rsl26":1.2281,"rsl40":1.3548},{"sym":"KEYS","sek":"Information Technology","sub":"Electronic Equipment & Instruments","preis":340.03,"rsl26":1.2237,"rsl40":1.4067},{"sym":"MPC","sek":"Energy","sub":"Oil & Gas Refining & Marketing","preis":260.81,"rsl26":1.2225,"rsl40":1.2789},{"sym":"WST","sek":"Health Care","sub":"Health Care Supplies","preis":330.34,"rsl26":1.219,"rsl40":1.227},{"sym":"CAT","sek":"Industrials","sub":"Construction Machinery & Heavy Transportation Equipment","preis":897.63,"rsl26":1.2175,"rsl40":1.3693},{"sym":"ADI","sek":"Information Technology","sub":"Semiconductors","preis":412.13,"rsl26":1.2156,"rsl40":1.3529},{"sym":"MCHP","sek":"Information Technology","sub":"Semiconductors","preis":92.94,"rsl26":1.2125,"rsl40":1.3085},{"sym":"STT","sek":"Financials","sub":"Asset Management & Custody Banks","preis":164.85,"rsl26":1.2123,"rsl40":1.2872},{"sym":"PWR","sek":"Industrials","sub":"Construction & Engineering","preis":683.29,"rsl26":1.207,"rsl40":1.3267},{"sym":"CDNS","sek":"Information Technology","sub":"Application Software","preis":383.74,"rsl26":1.2024,"rsl40":1.1797},{"sym":"BEN","sek":"Financials","sub":"Asset Management & Custody Banks","preis":31.81,"rsl26":1.1998,"rsl40":1.266},{"sym":"IBKR","sek":"Financials","sub":"Investment Banking & Brokerage","preis":88.83,"rsl26":1.1998,"rsl40":1.2462},{"sym":"HPQ","sek":"Information Technology","sub":"Technology Hardware, Storage & Peripherals","preis":24.68,"rsl26":1.1974,"rsl40":1.1024},{"sym":"TRGP","sek":"Energy","sub":"Oil & Gas Storage & Transportation","preis":269.37,"rsl26":1.1959,"rsl40":1.3272},{"sym":"DOC","sek":"Real Estate","sub":"Health Care REITs","preis":20.5,"rsl26":1.1943,"rsl40":1.1884},{"sym":"IRM","sek":"Real Estate","sub":"Other Specialized REITs","preis":125.17,"rsl26":1.1936,"rsl40":1.2308},{"sym":"VLO","sek":"Energy","sub":"Oil & Gas Refining & Marketing","preis":255.6,"rsl26":1.1924,"rsl40":1.2987},{"sym":"FDX","sek":"Industrials","sub":"Air Freight & Logistics","preis":338.0,"rsl26":1.1896,"rsl40":1.336},{"sym":"VRT","sek":"Industrials","sub":"Electrical Components & Equipment","preis":297.88,"rsl26":1.1888,"rsl40":1.3584},{"sym":"BBY","sek":"Consumer Discretionary","sub":"Computer & Electronics Retail","preis":77.1,"rsl26":1.1814,"rsl40":1.1243},{"sym":"CIEN","sek":"Information Technology","sub":"Communications Equipment","preis":445.22,"rsl26":1.1812,"rsl40":1.4773},{"sym":"MS","sek":"Financials","sub":"Investment Banking & Brokerage","preis":212.66,"rsl26":1.1783,"rsl40":1.2342},{"sym":"DAL","sek":"Industrials","sub":"Passenger Airlines","preis":81.83,"rsl26":1.1779,"rsl40":1.2428},{"sym":"PFG","sek":"Financials","sub":"Life & Health Insurance","preis":109.69,"rsl26":1.1777,"rsl40":1.2397},{"sym":"FSLR","sek":"Information Technology","sub":"Semiconductors","preis":271.17,"rsl26":1.1754,"rsl40":1.1709},{"sym":"MAR","sek":"Consumer Discretionary","sub":"Hotels, Resorts & Cruise Lines","preis":396.89,"rsl26":1.174,"rsl40":1.2605},{"sym":"SWKS","sek":"Information Technology","sub":"Semiconductors","preis":72.73,"rsl26":1.1718,"rsl40":1.1156},{"sym":"GWW","sek":"Industrials","sub":"Industrial Machinery & Supplies & Components","preis":1313.96,"rsl26":1.1712,"rsl40":1.2328},{"sym":"KIM","sek":"Real Estate","sub":"Retail REITs","preis":25.75,"rsl26":1.1674,"rsl40":1.1939},{"sym":"FRT","sek":"Real Estate","sub":"Retail REITs","preis":124.72,"rsl26":1.1667,"rsl40":1.2092},{"sym":"C","sek":"Financials","sub":"Diversified Banks","preis":138.07,"rsl26":1.1664,"rsl40":1.2407},{"sym":"CARR","sek":"Industrials","sub":"Building Products","preis":69.74,"rsl26":1.1649,"rsl40":1.178},{"sym":"ELV","sek":"Health Care","sub":"Managed Health Care","preis":399.18,"rsl26":1.1643,"rsl40":1.189},{"sym":"TGT","sek":"Consumer Staples","sub":"Consumer Staples Merchandise Retail","preis":132.64,"rsl26":1.1642,"rsl40":1.2651},{"sym":"ROST","sek":"Consumer Discretionary","sub":"Apparel Retail","preis":239.11,"rsl26":1.1625,"rsl40":1.2707},{"sym":"SJM","sek":"Consumer Staples","sub":"Packaged Foods & Meats","preis":116.83,"rsl26":1.1623,"rsl40":1.1514},{"sym":"CSX","sek":"Industrials","sub":"Rail Transportation","preis":47.37,"rsl26":1.1614,"rsl40":1.2306},{"sym":"VTRS","sek":"Health Care","sub":"Pharmaceuticals","preis":16.31,"rsl26":1.1602,"rsl40":1.2907},{"sym":"MNST","sek":"Consumer Staples","sub":"Soft Drinks & Non-alcoholic Beverages","preis":92.03,"rsl26":1.1589,"rsl40":1.2208},{"sym":"EBAY","sek":"Consumer Discretionary","sub":"Broadline Retail","preis":109.61,"rsl26":1.1546,"rsl40":1.1843},{"sym":"LLY","sek":"Health Care","sub":"Pharmaceuticals","preis":1160.95,"rsl26":1.1513,"rsl40":1.2173},{"sym":"ADM","sek":"Consumer Staples","sub":"Agricultural Products & Services","preis":78.9,"rsl26":1.1456,"rsl40":1.2031},{"sym":"NTRS","sek":"Financials","sub":"Asset Management & Custody Banks","preis":170.75,"rsl26":1.1455,"rsl40":1.2079},{"sym":"BNY","sek":"Financials","sub":"Asset Management & Custody Banks","preis":142.09,"rsl26":1.1444,"rsl40":1.2045},{"sym":"MET","sek":"Financials","sub":"Life & Health Insurance","preis":87.58,"rsl26":1.1414,"rsl40":1.1365},{"sym":"SLB","sek":"Energy","sub":"Oil & Gas Equipment & Services","preis":56.0,"rsl26":1.141,"rsl40":1.272},{"sym":"GS","sek":"Financials","sub":"Investment Banking & Brokerage","preis":1035.64,"rsl26":1.14,"rsl40":1.2037},{"sym":"GL","sek":"Financials","sub":"Life & Health Insurance","preis":165.1,"rsl26":1.1395,"rsl40":1.1637},{"sym":"APA","sek":"Energy","sub":"Oil & Gas Exploration & Production","preis":36.78,"rsl26":1.134,"rsl40":1.2605},{"sym":"WSM","sek":"Consumer Discretionary","sub":"Homefurnishing Retail","preis":218.74,"rsl26":1.1312,"rsl40":1.1383},{"sym":"ROK","sek":"Industrials","sub":"Electrical Components & Equipment","preis":457.59,"rsl26":1.1272,"rsl40":1.1791},{"sym":"PSA","sek":"Real Estate","sub":"Self-Storage REITs","preis":324.71,"rsl26":1.1272,"rsl40":1.1383},{"sym":"PSX","sek":"Energy","sub":"Oil & Gas Refining & Marketing","preis":178.1,"rsl26":1.127,"rsl40":1.1985},{"sym":"F","sek":"Consumer Discretionary","sub":"Automobile Manufacturers","preis":14.71,"rsl26":1.1255,"rsl40":1.1598},{"sym":"SPG","sek":"Real Estate","sub":"Retail REITs","preis":214.86,"rsl26":1.1239,"rsl40":1.1592},{"sym":"HWM","sek":"Industrials","sub":"Aerospace & Defense","preis":264.6,"rsl26":1.1224,"rsl40":1.1981},{"sym":"HAL","sek":"Energy","sub":"Oil & Gas Equipment & Services","preis":39.76,"rsl26":1.1203,"rsl40":1.2598},{"sym":"EQIX","sek":"Real Estate","sub":"Data Center REITs","preis":1043.1801,"rsl26":1.1197,"rsl40":1.1874},{"sym":"LYV","sek":"Communication Services","sub":"Movies & Entertainment","preis":172.33,"rsl26":1.1188,"rsl40":1.1227},{"sym":"CMI","sek":"Industrials","sub":"Construction Machinery & Heavy Transportation Equipment","preis":655.69,"rsl26":1.1159,"rsl40":1.2314},{"sym":"AIZ","sek":"Financials","sub":"Multi-line Insurance","preis":258.5,"rsl26":1.1147,"rsl40":1.145},{"sym":"DXCM","sek":"Health Care","sub":"Health Care Equipment","preis":75.25,"rsl26":1.1123,"rsl40":1.1137},{"sym":"KDP","sek":"Consumer Staples","sub":"Soft Drinks & Non-alcoholic Beverages","preis":31.23,"rsl26":1.1116,"rsl40":1.1321},{"sym":"FCX","sek":"Materials","sub":"Copper","preis":66.34,"rsl26":1.1075,"rsl40":1.2392},{"sym":"HLT","sek":"Consumer Discretionary","sub":"Hotels, Resorts & Cruise Lines","preis":341.86,"rsl26":1.1073,"rsl40":1.1607},{"sym":"ANET","sek":"Information Technology","sub":"Communications Equipment","preis":156.4,"rsl26":1.1069,"rsl40":1.1063},{"sym":"MO","sek":"Consumer Staples","sub":"Tobacco","preis":71.41,"rsl26":1.1035,"rsl40":1.1291},{"sym":"MAS","sek":"Industrials","sub":"Building Products","preis":73.75,"rsl26":1.1021,"rsl40":1.1011},{"sym":"EXPD","sek":"Industrials","sub":"Air Freight & Logistics","preis":166.44,"rsl26":1.0992,"rsl40":1.1686},{"sym":"INVH","sek":"Real Estate","sub":"Single-Family Residential REITs","preis":29.45,"rsl26":1.0986,"rsl40":1.0799},{"sym":"BXP","sek":"Real Estate","sub":"Office REITs","preis":66.23,"rsl26":1.0984,"rsl40":1.0346},{"sym":"EOG","sek":"Energy","sub":"Oil & Gas Exploration & Production","preis":136.53,"rsl26":1.0981,"rsl40":1.1465},{"sym":"TROW","sek":"Financials","sub":"Asset Management & Custody Banks","preis":108.27,"rsl26":1.0981,"rsl40":1.0893},{"sym":"CHRW","sek":"Industrials","sub":"Air Freight & Logistics","preis":191.11,"rsl26":1.0972,"rsl40":1.1865},{"sym":"VRSN","sek":"Information Technology","sub":"Internet Services & Infrastructure","preis":279.57,"rsl26":1.0959,"rsl40":1.0865},{"sym":"RL","sek":"Consumer Discretionary","sub":"Apparel, Accessories & Luxury Goods","preis":393.3,"rsl26":1.0956,"rsl40":1.137},{"sym":"ESS","sek":"Real Estate","sub":"Multi-Family Residential REITs","preis":280.59,"rsl26":1.0951,"rsl40":1.0965},{"sym":"IEX","sek":"Industrials","sub":"Industrial Machinery & Supplies & Components","preis":216.9,"rsl26":1.0948,"rsl40":1.1643},{"sym":"MDLZ","sek":"Consumer Staples","sub":"Packaged Foods & Meats","preis":63.36,"rsl26":1.0946,"rsl40":1.0878},{"sym":"SATS","sek":"Communication Services","sub":"Wireless Telecommunication Services","preis":128.13,"rsl26":1.0943,"rsl40":1.2641},{"sym":"MRNA","sek":"Health Care","sub":"Biotechnology","preis":49.64,"rsl26":1.0942,"rsl40":1.2922},{"sym":"APH","sek":"Information Technology","sub":"Electronic Components","preis":152.46,"rsl26":1.094,"rsl40":1.1292},{"sym":"FITB","sek":"Financials","sub":"Regional Banks","preis":53.42,"rsl26":1.0935,"rsl40":1.1435},{"sym":"JCI","sek":"Industrials","sub":"Building Products","preis":144.01,"rsl26":1.0932,"rsl40":1.157},{"sym":"INCY","sek":"Health Care","sub":"Biotechnology","preis":107.83,"rsl26":1.0921,"rsl40":1.1188},{"sym":"UAL","sek":"Industrials","sub":"Passenger Airlines","preis":112.61,"rsl26":1.092,"rsl40":1.1047},{"sym":"KO","sek":"Consumer Staples","sub":"Soft Drinks & Non-alcoholic Beverages","preis":82.53,"rsl26":1.0907,"rsl40":1.1324},{"sym":"CPT","sek":"Real Estate","sub":"Multi-Family Residential REITs","preis":114.44,"rsl26":1.0902,"rsl40":1.0992},{"sym":"BAX","sek":"Health Care","sub":"Health Care Equipment","preis":20.49,"rsl26":1.0895,"rsl40":1.0368},{"sym":"CPAY","sek":"Financials","sub":"Transaction & Payment Processing Services","preis":350.85,"rsl26":1.0894,"rsl40":1.1263},{"sym":"BG","sek":"Consumer Staples","sub":"Agricultural Products & Services","preis":125.28,"rsl26":1.0886,"rsl40":1.1896},{"sym":"AAPL","sek":"Information Technology","sub":"Technology Hardware, Storage & Peripherals","preis":295.63,"rsl26":1.0886,"rsl40":1.1108},{"sym":"LIN","sek":"Materials","sub":"Industrial Gases","preis":515.44,"rsl26":1.0883,"rsl40":1.1121},{"sym":"IVZ","sek":"Financials","sub":"Asset Management & Custody Banks","preis":28.29,"rsl26":1.0881,"rsl40":1.1409},{"sym":"PLD","sek":"Real Estate","sub":"Industrial REITs","preis":147.19,"rsl26":1.0877,"rsl40":1.1402},{"sym":"FANG","sek":"Energy","sub":"Oil & Gas Exploration & Production","preis":191.59,"rsl26":1.0869,"rsl40":1.1668},{"sym":"BKR","sek":"Energy","sub":"Oil & Gas Equipment & Services","preis":63.48,"rsl26":1.0867,"rsl40":1.1661},{"sym":"SWK","sek":"Industrials","sub":"Industrial Machinery & Supplies & Components","preis":83.13,"rsl26":1.0861,"rsl40":1.1245},{"sym":"D","sek":"Utilities","sub":"Multi-Utilities","preis":66.69,"rsl26":1.0857,"rsl40":1.1043},{"sym":"CFG","sek":"Financials","sub":"Regional Banks","preis":66.51,"rsl26":1.085,"rsl40":1.153},{"sym":"OKE","sek":"Energy","sub":"Oil & Gas Storage & Transportation","preis":89.2,"rsl26":1.0845,"rsl40":1.1519},{"sym":"PNC","sek":"Financials","sub":"Diversified Banks","preis":233.94,"rsl26":1.0836,"rsl40":1.1332},{"sym":"DECK","sek":"Consumer Discretionary","sub":"Footwear","preis":114.37,"rsl26":1.0832,"rsl40":1.1064},{"sym":"BIIB","sek":"Health Care","sub":"Biotechnology","preis":199.96,"rsl26":1.083,"rsl40":1.1549},{"sym":"GE","sek":"Industrials","sub":"Aerospace & Defense","preis":332.76,"rsl26":1.0827,"rsl40":1.0978},{"sym":"UDR","sek":"Real Estate","sub":"Multi-Family Residential REITs","preis":39.11,"rsl26":1.0821,"rsl40":1.0909},{"sym":"EIX","sek":"Utilities","sub":"Electric Utilities","preis":72.34,"rsl26":1.082,"rsl40":1.1578},{"sym":"EXR","sek":"Real Estate","sub":"Self-Storage REITs","preis":150.26,"rsl26":1.0815,"rsl40":1.0881},{"sym":"TJX","sek":"Consumer Discretionary","sub":"Apparel Retail","preis":168.34,"rsl26":1.0814,"rsl40":1.1159},{"sym":"PPG","sek":"Materials","sub":"Specialty Chemicals","preis":118.24,"rsl26":1.0811,"rsl40":1.1108},{"sym":"UNP","sek":"Industrials","sub":"Rail Transportation","preis":268.28,"rsl26":1.0805,"rsl40":1.1242},{"sym":"REG","sek":"Real Estate","sub":"Retail REITs","preis":80.69,"rsl26":1.0798,"rsl40":1.1065},{"sym":"SBUX","sek":"Consumer Discretionary","sub":"Restaurants","preis":102.28,"rsl26":1.0794,"rsl40":1.129},{"sym":"GOOGL","sek":"Communication Services","sub":"Interactive Media & Services","preis":357.77,"rsl26":1.0791,"rsl40":1.1661},{"sym":"GOOG","sek":"Communication Services","sub":"Interactive Media & Services","preis":356.56,"rsl26":1.0785,"rsl40":1.1638},{"sym":"OXY","sek":"Energy","sub":"Oil & Gas Exploration & Production","preis":55.47,"rsl26":1.0772,"rsl40":1.1427},{"sym":"MTB","sek":"Financials","sub":"Regional Banks","preis":227.82,"rsl26":1.0769,"rsl40":1.1233},{"sym":"HRL","sek":"Consumer Staples","sub":"Packaged Foods & Meats","preis":24.44,"rsl26":1.0752,"rsl40":1.0692},{"sym":"ARE","sek":"Real Estate","sub":"Office REITs","preis":52.77,"rsl26":1.0749,"rsl40":0.9446},{"sym":"IFF","sek":"Materials","sub":"Specialty Chemicals","preis":77.51,"rsl26":1.0734,"rsl40":1.1212},{"sym":"KEY","sek":"Financials","sub":"Regional Banks","preis":22.33,"rsl26":1.0725,"rsl40":1.1324},{"sym":"EQR","sek":"Real Estate","sub":"Multi-Family Residential REITs","preis":66.65,"rsl26":1.0719,"rsl40":1.079},{"sym":"XYZ","sek":"Financials","sub":"Transaction & Payment Processing Services","preis":69.09,"rsl26":1.0702,"rsl40":1.0244},{"sym":"EME","sek":"Industrials","sub":"Construction & Engineering","preis":811.53,"rsl26":1.0699,"rsl40":1.1277},{"sym":"ETN","sek":"Industrials","sub":"Electrical Components & Equipment","preis":393.64,"rsl26":1.0693,"rsl40":1.077},{"sym":"CI","sek":"Health Care","sub":"Health Care Services","preis":294.84,"rsl26":1.0688,"rsl40":1.0587},{"sym":"NVDA","sek":"Information Technology","sub":"Semiconductors","preis":204.87,"rsl26":1.0675,"rsl40":1.0844},{"sym":"WAB","sek":"Industrials","sub":"Construction Machinery & Heavy Transportation Equipment","preis":262.09,"rsl26":1.0671,"rsl40":1.1457},{"sym":"PM","sek":"Consumer Staples","sub":"Tobacco","preis":180.77,"rsl26":1.0667,"rsl40":1.1008},{"sym":"TKO","sek":"Communication Services","sub":"Movies & Entertainment","preis":213.7,"rsl26":1.0667,"rsl40":1.0873},{"sym":"MRK","sek":"Health Care","sub":"Pharmaceuticals","preis":120.76,"rsl26":1.0661,"rsl40":1.1638},{"sym":"GEV","sek":"Industrials","sub":"Heavy Electrical Equipment","preis":906.79,"rsl26":1.0653,"rsl40":1.1897},{"sym":"DGX","sek":"Health Care","sub":"Health Care Services","preis":203.83,"rsl26":1.0646,"rsl40":1.0844},{"sym":"SOLV","sek":"Health Care","sub":"Health Care Technology","preis":79.22,"rsl26":1.0638,"rsl40":1.0664},{"sym":"MAA","sek":"Real Estate","sub":"Multi-Family Residential REITs","preis":138.1,"rsl26":1.0634,"rsl40":1.0573},{"sym":"PNW","sek":"Utilities","sub":"Multi-Utilities","preis":102.4,"rsl26":1.0633,"rsl40":1.1},{"sym":"AVGO","sek":"Information Technology","sub":"Semiconductors","preis":385.57,"rsl26":1.0633,"rsl40":1.0805},{"sym":"DRI","sek":"Consumer Discretionary","sub":"Restaurants","preis":210.84,"rsl26":1.0631,"rsl40":1.0886},{"sym":"CAH","sek":"Health Care","sub":"Health Care Distributors","preis":221.16,"rsl26":1.0629,"rsl40":1.1355},{"sym":"ETR","sek":"Utilities","sub":"Electric Utilities","preis":109.89,"rsl26":1.0623,"rsl40":1.1059},{"sym":"BAC","sek":"Financials","sub":"Diversified Banks","preis":55.16,"rsl26":1.0623,"rsl40":1.0705},{"sym":"AMT","sek":"Real Estate","sub":"Telecom Tower REITs","preis":189.31,"rsl26":1.0605,"rsl40":1.0491},{"sym":"UPS","sek":"Industrials","sub":"Air Freight & Logistics","preis":108.65,"rsl26":1.0602,"rsl40":1.1277},{"sym":"TT","sek":"Industrials","sub":"Building Products","preis":460.14,"rsl26":1.06,"rsl40":1.0757},{"sym":"KHC","sek":"Consumer Staples","sub":"Packaged Foods & Meats","preis":24.22,"rsl26":1.0595,"rsl40":1.0356},{"sym":"USB","sek":"Financials","sub":"Diversified Banks","preis":57.63,"rsl26":1.0589,"rsl40":1.1131},{"sym":"CCI","sek":"Real Estate","sub":"Telecom Tower REITs","preis":92.04,"rsl26":1.0587,"rsl40":1.0388},{"sym":"ALL","sek":"Financials","sub":"Property & Casualty Insurance","preis":219.57,"rsl26":1.0584,"rsl40":1.07},{"sym":"APO","sek":"Financials","sub":"Asset Management & Custody Banks","preis":133.91,"rsl26":1.0556,"rsl40":1.0483},{"sym":"EVRG","sek":"Utilities","sub":"Electric Utilities","preis":82.81,"rsl26":1.0544,"rsl40":1.0788},{"sym":"RF","sek":"Financials","sub":"Regional Banks","preis":28.89,"rsl26":1.0541,"rsl40":1.0902},{"sym":"HSIC","sek":"Health Care","sub":"Health Care Distributors","preis":80.22,"rsl26":1.0521,"rsl40":1.0934},{"sym":"FOXA","sek":"Communication Services","sub":"Broadcasting","preis":68.3,"rsl26":1.0521,"rsl40":1.0722},{"sym":"FOX","sek":"Communication Services","sub":"Broadcasting","preis":61.36,"rsl26":1.0519,"rsl40":1.0713},{"sym":"NDSN","sek":"Industrials","sub":"Industrial Machinery & Supplies & Components","preis":285.63,"rsl26":1.0517,"rsl40":1.1133},{"sym":"SNA","sek":"Industrials","sub":"Industrial Machinery & Supplies & Components","preis":384.67,"rsl26":1.0515,"rsl40":1.0885},{"sym":"JNJ","sek":"Health Care","sub":"Pharmaceuticals","preis":238.33,"rsl26":1.0511,"rsl40":1.1236},{"sym":"WELL","sek":"Real Estate","sub":"Health Care REITs","preis":210.67,"rsl26":1.0508,"rsl40":1.0944},{"sym":"LNT","sek":"Utilities","sub":"Electric Utilities","preis":72.62,"rsl26":1.0493,"rsl40":1.07},{"sym":"FAST","sek":"Industrials","sub":"Trading Companies & Distributors","preis":46.39,"rsl26":1.0484,"rsl40":1.0516},{"sym":"SW","sek":"Materials","sub":"Paper & Plastic Packaging Products & Materials","preis":42.69,"rsl26":1.0481,"rsl40":1.0562},{"sym":"TPR","sek":"Consumer Discretionary","sub":"Apparel, Accessories & Luxury Goods","preis":145.39,"rsl26":1.0474,"rsl40":1.1348},{"sym":"AVB","sek":"Real Estate","sub":"Multi-Family Residential REITs","preis":184.36,"rsl26":1.0474,"rsl40":1.0355},{"sym":"ORCL","sek":"Information Technology","sub":"Application Software","preis":184.1,"rsl26":1.0474,"rsl40":0.8974},{"sym":"LUV","sek":"Industrials","sub":"Passenger Airlines","preis":44.29,"rsl26":1.0472,"rsl40":1.1446},{"sym":"AFL","sek":"Financials","sub":"Life & Health Insurance","preis":116.45,"rsl26":1.0457,"rsl40":1.0571},{"sym":"RVTY","sek":"Health Care","sub":"Health Care Equipment","preis":101.52,"rsl26":1.0453,"rsl40":1.0667},{"sym":"MSCI","sek":"Financials","sub":"Financial Exchanges & Data","preis":594.31,"rsl26":1.0449,"rsl40":1.0522},{"sym":"FTV","sek":"Industrials","sub":"Industrial Machinery & Supplies & Components","preis":59.84,"rsl26":1.044,"rsl40":1.0954},{"sym":"PRU","sek":"Financials","sub":"Life & Health Insurance","preis":106.51,"rsl26":1.044,"rsl40":1.0483},{"sym":"KVUE","sek":"Consumer Staples","sub":"Personal Care Products","preis":18.07,"rsl26":1.0438,"rsl40":1.064},{"sym":"SBAC","sek":"Real Estate","sub":"Telecom Tower REITs","preis":203.65,"rsl26":1.0434,"rsl40":1.0487},{"sym":"LYB","sek":"Materials","sub":"Specialty Chemicals","preis":63.47,"rsl26":1.0433,"rsl40":1.1387},{"sym":"CVX","sek":"Energy","sub":"Integrated Oil & Gas","preis":185.82,"rsl26":1.0433,"rsl40":1.1029},{"sym":"GRMN","sek":"Consumer Discretionary","sub":"Consumer Electronics","preis":238.58,"rsl26":1.0431,"rsl40":1.0471},{"sym":"TFC","sek":"Financials","sub":"Diversified Banks","preis":50.68,"rsl26":1.0408,"rsl40":1.0793},{"sym":"DTE","sek":"Utilities","sub":"Multi-Utilities","preis":145.79,"rsl26":1.0405,"rsl40":1.0529},{"sym":"DOW","sek":"Materials","sub":"Commodity Chemicals","preis":33.63,"rsl26":1.0403,"rsl40":1.1656},{"sym":"WAT","sek":"Health Care","sub":"Life Sciences Tools & Services","preis":359.74,"rsl26":1.0397,"rsl40":1.0479},{"sym":"GD","sek":"Industrials","sub":"Aerospace & Defense","preis":358.86,"rsl26":1.0386,"rsl40":1.0527},{"sym":"ABBV","sek":"Health Care","sub":"Biotechnology","preis":224.77,"rsl26":1.0381,"rsl40":1.0327},{"sym":"COP","sek":"Energy","sub":"Oil & Gas Exploration & Production","preis":115.36,"rsl26":1.038,"rsl40":1.1153},{"sym":"DLR","sek":"Real Estate","sub":"Data Center REITs","preis":182.84,"rsl26":1.0379,"rsl40":1.0598},{"sym":"NWS","sek":"Communication Services","sub":"Publishing","preis":30.13,"rsl26":1.0377,"rsl40":1.0135},{"sym":"VZ","sek":"Communication Services","sub":"Integrated Telecommunication Services","preis":46.94,"rsl26":1.0375,"rsl40":1.0809},{"sym":"CL","sek":"Consumer Staples","sub":"Household Products","preis":89.39,"rsl26":1.0375,"rsl40":1.0707},{"sym":"NSC","sek":"Industrials","sub":"Rail Transportation","preis":310.53,"rsl26":1.0372,"rsl40":1.0584},{"sym":"IBM","sek":"Information Technology","sub":"IT Consulting & Other Services","preis":274.85,"rsl26":1.0371,"rsl40":1.0187},{"sym":"DHI","sek":"Consumer Discretionary","sub":"Homebuilding","preis":154.43,"rsl26":1.0371,"rsl40":1.0149},{"sym":"TRV","sek":"Financials","sub":"Property & Casualty Insurance","preis":303.9,"rsl26":1.0365,"rsl40":1.0607},{"sym":"CHD","sek":"Consumer Staples","sub":"Household Products","preis":97.08,"rsl26":1.0364,"rsl40":1.063},{"sym":"CNP","sek":"Utilities","sub":"Multi-Utilities","preis":42.55,"rsl26":1.0363,"rsl40":1.0614},{"sym":"PKG","sek":"Materials","sub":"Paper & Plastic Packaging Products & Materials","preis":224.4,"rsl26":1.036,"rsl40":1.0565},{"sym":"CINF","sek":"Financials","sub":"Property & Casualty Insurance","preis":168.3,"rsl26":1.035,"rsl40":1.0485},{"sym":"NWSA","sek":"Communication Services","sub":"Publishing","preis":26.3,"rsl26":1.0347,"rsl40":1.0067},{"sym":"WMB","sek":"Energy","sub":"Oil & Gas Storage & Transportation","preis":71.62,"rsl26":1.0342,"rsl40":1.0896},{"sym":"GEN","sek":"Information Technology","sub":"Systems Software","preis":23.94,"rsl26":1.0341,"rsl40":0.9742},{"sym":"NI","sek":"Utilities","sub":"Multi-Utilities","preis":46.62,"rsl26":1.034,"rsl40":1.0612},{"sym":"EW","sek":"Health Care","sub":"Health Care Equipment","preis":85.76,"rsl26":1.0339,"rsl40":1.0481},{"sym":"AMGN","sek":"Health Care","sub":"Biotechnology","preis":354.06,"rsl26":1.0329,"rsl40":1.0852},{"sym":"DOV","sek":"Industrials","sub":"Industrial Machinery & Supplies & Components","preis":218.53,"rsl26":1.0327,"rsl40":1.1014},{"sym":"CRL","sek":"Health Care","sub":"Life Sciences Tools & Services","preis":188.06,"rsl26":1.0319,"rsl40":1.0598},{"sym":"KMB","sek":"Consumer Staples","sub":"Household Products","preis":101.54,"rsl26":1.03,"rsl40":0.9796},{"sym":"AMZN","sek":"Consumer Discretionary","sub":"Broadline Retail","preis":241.51,"rsl26":1.0299,"rsl40":1.0389},{"sym":"A","sek":"Health Care","sub":"Life Sciences Tools & Services","preis":129.55,"rsl26":1.0294,"rsl40":0.9971},{"sym":"DD","sek":"Materials","sub":"Specialty Chemicals","preis":46.84,"rsl26":1.0285,"rsl40":1.1259},{"sym":"HBAN","sek":"Financials","sub":"Regional Banks","preis":17.21,"rsl26":1.0284,"rsl40":1.0403},{"sym":"SMCI","sek":"Information Technology","sub":"Technology Hardware, Storage & Peripherals","preis":31.97,"rsl26":1.0283,"rsl40":0.891},{"sym":"DE","sek":"Industrials","sub":"Agricultural & Farm Machinery","preis":568.64,"rsl26":1.0274,"rsl40":1.0875},{"sym":"AEP","sek":"Utilities","sub":"Electric Utilities","preis":128.48,"rsl26":1.0271,"rsl40":1.0624},{"sym":"HOOD","sek":"Financials","sub":"Investment Banking & Brokerage","preis":92.23,"rsl26":1.0266,"rsl40":0.8964},{"sym":"JPM","sek":"Financials","sub":"Diversified Banks","preis":313.49,"rsl26":1.0263,"rsl40":1.0298},{"sym":"ALGN","sek":"Health Care","sub":"Health Care Supplies","preis":176.51,"rsl26":1.0252,"rsl40":1.1083},{"sym":"DVN","sek":"Energy","sub":"Oil & Gas Exploration & Production","preis":44.61,"rsl26":1.025,"rsl40":1.1094},{"sym":"CB","sek":"Financials","sub":"Property & Casualty Insurance","preis":327.93,"rsl26":1.0249,"rsl40":1.0696},{"sym":"CBOE","sek":"Financials","sub":"Financial Exchanges & Data","preis":295.9,"rsl26":1.0242,"rsl40":1.0852},{"sym":"XOM","sek":"Energy","sub":"Integrated Oil & Gas","preis":146.6,"rsl26":1.024,"rsl40":1.1084},{"sym":"GM","sek":"Consumer Discretionary","sub":"Automobile Manufacturers","preis":80.85,"rsl26":1.024,"rsl40":1.101},{"sym":"TXT","sek":"Industrials","sub":"Aerospace & Defense","preis":93.75,"rsl26":1.0239,"rsl40":1.0624},{"sym":"SYY","sek":"Consumer Staples","sub":"Food Distributors","preis":79.64,"rsl26":1.0229,"rsl40":1.0264},{"sym":"SO","sek":"Utilities","sub":"Electric Utilities","preis":93.27,"rsl26":1.0221,"rsl40":1.0231},{"sym":"AEE","sek":"Utilities","sub":"Multi-Utilities","preis":108.25,"rsl26":1.0218,"rsl40":1.0406},{"sym":"TDY","sek":"Information Technology","sub":"Electronic Equipment & Instruments","preis":623.73,"rsl26":1.0213,"rsl40":1.064},{"sym":"LII","sek":"Industrials","sub":"Building Products","preis":517.03,"rsl26":1.0213,"rsl40":1.0153},{"sym":"WEC","sek":"Utilities","sub":"Electric Utilities","preis":113.07,"rsl26":1.0212,"rsl40":1.0261},{"sym":"KMI","sek":"Energy","sub":"Oil & Gas Storage & Transportation","preis":31.36,"rsl26":1.0208,"rsl40":1.0737},{"sym":"AME","sek":"Industrials","sub":"Electrical Components & Equipment","preis":226.21,"rsl26":1.0193,"rsl40":1.0753},{"sym":"MMM","sek":"Industrials","sub":"Industrial Conglomerates","preis":157.91,"rsl26":1.0189,"rsl40":1.011},{"sym":"RCL","sek":"Consumer Discretionary","sub":"Hotels, Resorts & Cruise Lines","preis":287.96,"rsl26":1.0189,"rsl40":0.9978},{"sym":"VTR","sek":"Real Estate","sub":"Health Care REITs","preis":83.89,"rsl26":1.0186,"rsl40":1.0711},{"sym":"AES","sek":"Utilities","sub":"Independent Power Producers & Energy Traders","preis":14.67,"rsl26":1.0181,"rsl40":1.0454},{"sym":"CDW","sek":"Information Technology","sub":"Technology Distributors","preis":129.13,"rsl26":1.0168,"rsl40":0.9502},{"sym":"O","sek":"Real Estate","sub":"Retail REITs","preis":61.91,"rsl26":1.0164,"rsl40":1.0425},{"sym":"PAYX","sek":"Industrials","sub":"Human Resource & Employment Services","preis":99.27,"rsl26":1.0158,"rsl40":0.941},{"sym":"AON","sek":"Financials","sub":"Insurance Brokers","preis":335.17,"rsl26":1.0144,"rsl40":0.9912},{"sym":"EMR","sek":"Industrials","sub":"Electrical Components & Equipment","preis":142.09,"rsl26":1.0131,"rsl40":1.0389},{"sym":"CF","sek":"Materials","sub":"Fertilizers & Agricultural Chemicals","preis":106.56,"rsl26":1.0129,"rsl40":1.0909},{"sym":"PG","sek":"Consumer Staples","sub":"Personal Care Products","preis":148.34,"rsl26":1.0117,"rsl40":1.0062},{"sym":"EG","sek":"Financials","sub":"Reinsurance","preis":336.25,"rsl26":1.0105,"rsl40":1.0102},{"sym":"DUK","sek":"Utilities","sub":"Electric Utilities","preis":124.19,"rsl26":1.0101,"rsl40":1.0168},{"sym":"PFE","sek":"Health Care","sub":"Pharmaceuticals","preis":26.17,"rsl26":1.0097,"rsl40":1.0399},{"sym":"ED","sek":"Utilities","sub":"Multi-Utilities","preis":106.84,"rsl26":1.009,"rsl40":1.0403},{"sym":"ARES","sek":"Financials","sub":"Asset Management & Custody Banks","preis":132.82,"rsl26":1.0075,"rsl40":0.9464},{"sym":"PCG","sek":"Utilities","sub":"Multi-Utilities","preis":16.79,"rsl26":1.0061,"rsl40":1.0283},{"sym":"COST","sek":"Consumer Staples","sub":"Consumer Staples Merchandise Retail","preis":975.69,"rsl26":1.0061,"rsl40":1.0216},{"sym":"WY","sek":"Real Estate","sub":"Timber REITs","preis":24.33,"rsl26":1.0058,"rsl40":1.0206},{"sym":"APD","sek":"Materials","sub":"Industrial Gases","preis":278.12,"rsl26":1.0053,"rsl40":1.0227},{"sym":"EA","sek":"Communication Services","sub":"Interactive Home Entertainment","preis":203.05,"rsl26":1.0049,"rsl40":1.0248},{"sym":"CCL","sek":"Consumer Discretionary","sub":"Hotels, Resorts & Cruise Lines","preis":28.12,"rsl26":1.0044,"rsl40":0.998},{"sym":"DLTR","sek":"Consumer Staples","sub":"Consumer Staples Merchandise Retail","preis":114.89,"rsl26":1.004,"rsl40":1.0508},{"sym":"L","sek":"Financials","sub":"Multi-line Insurance","preis":107.37,"rsl26":1.0032,"rsl40":1.0252},{"sym":"XEL","sek":"Utilities","sub":"Multi-Utilities","preis":78.27,"rsl26":1.0029,"rsl40":1.008},{"sym":"LH","sek":"Health Care","sub":"Health Care Services","preis":265.27,"rsl26":1.0028,"rsl40":0.9954},{"sym":"EXC","sek":"Utilities","sub":"Electric Utilities","preis":45.51,"rsl26":1.0023,"rsl40":1.0105},{"sym":"SRE","sek":"Utilities","sub":"Multi-Utilities","preis":91.54,"rsl26":1.0022,"rsl40":1.0167},{"sym":"PHM","sek":"Consumer Discretionary","sub":"Homebuilding","preis":124.0,"rsl26":1.0016,"rsl40":0.9953},{"sym":"ES","sek":"Utilities","sub":"Electric Utilities","preis":68.43,"rsl26":1.0006,"rsl40":1.0082},{"sym":"BMY","sek":"Health Care","sub":"Pharmaceuticals","preis":56.9,"rsl26":1.0002,"rsl40":1.0808},{"sym":"VICI","sek":"Real Estate","sub":"Hotel & Resort REITs","preis":28.09,"rsl26":0.999,"rsl40":0.974},{"sym":"PCAR","sek":"Industrials","sub":"Construction Machinery & Heavy Transportation Equipment","preis":117.58,"rsl26":0.9988,"rsl40":1.0645},{"sym":"OMC","sek":"Communication Services","sub":"Advertising","preis":75.59,"rsl26":0.9987,"rsl40":1.0073},{"sym":"ADP","sek":"Industrials","sub":"Human Resource & Employment Services","preis":225.77,"rsl26":0.9985,"rsl40":0.9298},{"sym":"HON","sek":"Industrials","sub":"Industrial Conglomerates","preis":219.12,"rsl26":0.9973,"rsl40":1.0389},{"sym":"BRK-B","sek":"Financials","sub":"Multi-Sector Holdings","preis":485.79,"rsl26":0.9972,"rsl40":0.9906},{"sym":"BF-B","sek":"Consumer Staples","sub":"Distillers & Vintners","preis":26.68,"rsl26":0.9959,"rsl40":0.9909},{"sym":"CMS","sek":"Utilities","sub":"Multi-Utilities","preis":72.85,"rsl26":0.9949,"rsl40":1.0036},{"sym":"WRB","sek":"Financials","sub":"Property & Casualty Insurance","preis":67.54,"rsl26":0.9941,"rsl40":0.9669},{"sym":"BA","sek":"Industrials","sub":"Aerospace & Defense","preis":221.63,"rsl26":0.9931,"rsl40":1.0124},{"sym":"FE","sek":"Utilities","sub":"Electric Utilities","preis":46.67,"rsl26":0.9927,"rsl40":1.0132},{"sym":"CTAS","sek":"Industrials","sub":"Diversified Support Services","preis":181.88,"rsl26":0.9912,"rsl40":0.9742},{"sym":"FDS","sek":"Financials","sub":"Financial Exchanges & Data","preis":236.64,"rsl26":0.9912,"rsl40":0.9157},{"sym":"ABNB","sek":"Consumer Discretionary","sub":"Hotels, Resorts & Cruise Lines","preis":130.87,"rsl26":0.9895,"rsl40":1.0152},{"sym":"TDG","sek":"Industrials","sub":"Aerospace & Defense","preis":1257.59,"rsl26":0.9894,"rsl40":0.9801},{"sym":"YUM","sek":"Consumer Discretionary","sub":"Restaurants","preis":153.27,"rsl26":0.9892,"rsl40":1.0113},{"sym":"WYNN","sek":"Consumer Discretionary","sub":"Casinos & Gaming","preis":107.75,"rsl26":0.9892,"rsl40":0.9463},{"sym":"PGR","sek":"Financials","sub":"Property & Casualty Insurance","preis":202.26,"rsl26":0.9883,"rsl40":0.9662},{"sym":"V","sek":"Financials","sub":"Transaction & Payment Processing Services","preis":319.05,"rsl26":0.9881,"rsl40":0.9713},{"sym":"CTVA","sek":"Materials","sub":"Fertilizers & Agricultural Chemicals","preis":74.86,"rsl26":0.988,"rsl40":1.0342},{"sym":"PEG","sek":"Utilities","sub":"Electric Utilities","preis":78.78,"rsl26":0.9878,"rsl40":0.9866},{"sym":"SNPS","sek":"Information Technology","sub":"Application Software","preis":456.29,"rsl26":0.9861,"rsl40":0.9852},{"sym":"WMT","sek":"Consumer Staples","sub":"Consumer Staples Merchandise Retail","preis":120.5,"rsl26":0.9857,"rsl40":1.0437},{"sym":"VRTX","sek":"Health Care","sub":"Biotechnology","preis":445.04,"rsl26":0.9824,"rsl40":1.0158},{"sym":"WFC","sek":"Financials","sub":"Diversified Banks","preis":82.4,"rsl26":0.9823,"rsl40":0.9882},{"sym":"PH","sek":"Industrials","sub":"Industrial Machinery & Supplies & Components","preis":902.37,"rsl26":0.9813,"rsl40":1.0385},{"sym":"AJG","sek":"Financials","sub":"Insurance Brokers","preis":220.9,"rsl26":0.9807,"rsl40":0.9063},{"sym":"PPL","sek":"Utilities","sub":"Electric Utilities","preis":35.46,"rsl26":0.9801,"rsl40":0.985},{"sym":"MSI","sek":"Information Technology","sub":"Communications Equipment","preis":410.35,"rsl26":0.9783,"rsl40":0.9683},{"sym":"WM","sek":"Industrials","sub":"Environmental & Facilities Services","preis":218.79,"rsl26":0.9771,"rsl40":0.9959},{"sym":"SYF","sek":"Financials","sub":"Consumer Finance","preis":72.33,"rsl26":0.9771,"rsl40":0.9808},{"sym":"AIG","sek":"Financials","sub":"Multi-line Insurance","preis":75.32,"rsl26":0.9763,"rsl40":0.974},{"sym":"RTX","sek":"Industrials","sub":"Aerospace & Defense","preis":184.21,"rsl26":0.9755,"rsl40":1.0205},{"sym":"BLK","sek":"Financials","sub":"Asset Management & Custody Banks","preis":1016.58,"rsl26":0.975,"rsl40":0.9592},{"sym":"ECL","sek":"Materials","sub":"Specialty Chemicals","preis":263.63,"rsl26":0.974,"rsl40":0.9777},{"sym":"AMCR","sek":"Materials","sub":"Paper & Plastic Packaging Products & Materials","preis":39.92,"rsl26":0.973,"rsl40":0.9813},{"sym":"RSG","sek":"Industrials","sub":"Environmental & Facilities Services","preis":208.05,"rsl26":0.9727,"rsl40":0.964},{"sym":"LMT","sek":"Industrials","sub":"Aerospace & Defense","preis":548.68,"rsl26":0.9725,"rsl40":1.0348},{"sym":"ZBH","sek":"Health Care","sub":"Health Care Equipment","preis":87.14,"rsl26":0.9701,"rsl40":0.9408},{"sym":"VMC","sek":"Materials","sub":"Construction Materials","preis":280.19,"rsl26":0.9697,"rsl40":0.9652},{"sym":"KR","sek":"Consumer Staples","sub":"Food Retail","preis":64.12,"rsl26":0.9694,"rsl40":0.9714},{"sym":"ITW","sek":"Industrials","sub":"Industrial Machinery & Supplies & Components","preis":254.45,"rsl26":0.9693,"rsl40":0.9862},{"sym":"WBD","sek":"Communication Services","sub":"Broadcasting","preis":26.86,"rsl26":0.969,"rsl40":1.0837},{"sym":"ORLY","sek":"Consumer Discretionary","sub":"Automotive Retail","preis":90.1,"rsl26":0.9689,"rsl40":0.9391},{"sym":"J","sek":"Industrials","sub":"Construction & Engineering","preis":126.31,"rsl26":0.9687,"rsl40":0.9238},{"sym":"BALL","sek":"Materials","sub":"Metal, Glass & Plastic Containers","preis":56.34,"rsl26":0.9672,"rsl40":1.0269},{"sym":"NEE","sek":"Utilities","sub":"Multi-Utilities","preis":84.84,"rsl26":0.9666,"rsl40":1.0058},{"sym":"NDAQ","sek":"Financials","sub":"Financial Exchanges & Data","preis":86.74,"rsl26":0.9647,"rsl40":0.9687},{"sym":"RJF","sek":"Financials","sub":"Investment Banking & Brokerage","preis":150.42,"rsl26":0.964,"rsl40":0.9497},{"sym":"HUBB","sek":"Industrials","sub":"Industrial Machinery & Supplies & Components","preis":469.32,"rsl26":0.9633,"rsl40":1.0035},{"sym":"TSLA","sek":"Consumer Discretionary","sub":"Automobile Manufacturers","preis":399.15,"rsl26":0.9633,"rsl40":0.9608},{"sym":"AWK","sek":"Utilities","sub":"Water Utilities","preis":124.45,"rsl26":0.961,"rsl40":0.9501},{"sym":"MRSH","sek":"Financials","sub":"Insurance Brokers","preis":168.15,"rsl26":0.9608,"rsl40":0.9323},{"sym":"SHW","sek":"Materials","sub":"Specialty Chemicals","preis":316.89,"rsl26":0.9597,"rsl40":0.9476},{"sym":"APTV","sek":"Consumer Discretionary","sub":"Automotive Parts & Equipment","preis":67.96,"rsl26":0.9597,"rsl40":0.9094},{"sym":"ACGL","sek":"Financials","sub":"Property & Casualty Insurance","preis":91.13,"rsl26":0.9583,"rsl40":0.976},{"sym":"ATO","sek":"Utilities","sub":"Gas Utilities","preis":168.23,"rsl26":0.9568,"rsl40":0.9705},{"sym":"AXP","sek":"Financials","sub":"Consumer Finance","preis":318.49,"rsl26":0.9565,"rsl40":0.9482},{"sym":"TTWO","sek":"Communication Services","sub":"Interactive Home Entertainment","preis":212.08,"rsl26":0.9557,"rsl40":0.9176},{"sym":"STZ","sek":"Consumer Staples","sub":"Distillers & Vintners","preis":143.12,"rsl26":0.9554,"rsl40":0.9889},{"sym":"DIS","sek":"Communication Services","sub":"Movies & Entertainment","preis":100.34,"rsl26":0.9545,"rsl40":0.9355},{"sym":"AMP","sek":"Financials","sub":"Asset Management & Custody Banks","preis":450.38,"rsl26":0.9544,"rsl40":0.9526},{"sym":"PEP","sek":"Consumer Staples","sub":"Soft Drinks & Non-alcoholic Beverages","preis":143.73,"rsl26":0.9542,"rsl40":0.9751},{"sym":"HIG","sek":"Financials","sub":"Property & Casualty Insurance","preis":128.4,"rsl26":0.9527,"rsl40":0.9671},{"sym":"HD","sek":"Consumer Discretionary","sub":"Home Improvement Retail","preis":326.01,"rsl26":0.9517,"rsl40":0.9174},{"sym":"CPB","sek":"Consumer Staples","sub":"Packaged Foods & Meats","preis":22.73,"rsl26":0.9512,"rsl40":0.8693},{"sym":"TECH","sek":"Health Care","sub":"Life Sciences Tools & Services","preis":54.02,"rsl26":0.9507,"rsl40":0.9428},{"sym":"LHX","sek":"Industrials","sub":"Aerospace & Defense","preis":312.17,"rsl26":0.9504,"rsl40":0.9984},{"sym":"IQV","sek":"Health Care","sub":"Life Sciences Tools & Services","preis":181.06,"rsl26":0.949,"rsl40":0.9255},{"sym":"TEL","sek":"Information Technology","sub":"Electronic Manufacturing Services","preis":207.74,"rsl26":0.9488,"rsl40":0.9433},{"sym":"CLX","sek":"Consumer Staples","sub":"Household Products","preis":98.3,"rsl26":0.9488,"rsl40":0.9217},{"sym":"MCO","sek":"Financials","sub":"Financial Exchanges & Data","preis":441.82,"rsl26":0.9478,"rsl40":0.9347},{"sym":"BDX","sek":"Health Care","sub":"Health Care Equipment","preis":147.35,"rsl26":0.9444,"rsl40":0.9681},{"sym":"BX","sek":"Financials","sub":"Asset Management & Custody Banks","preis":120.88,"rsl26":0.9431,"rsl40":0.8761},{"sym":"LEN","sek":"Consumer Discretionary","sub":"Homebuilding","preis":94.95,"rsl26":0.9404,"rsl40":0.8666},{"sym":"EL","sek":"Consumer Staples","sub":"Personal Care Products","preis":88.02,"rsl26":0.9396,"rsl40":0.9504},{"sym":"TMUS","sek":"Communication Services","sub":"Wireless Telecommunication Services","preis":185.82,"rsl26":0.9395,"rsl40":0.8992},{"sym":"MCD","sek":"Consumer Discretionary","sub":"Restaurants","preis":284.77,"rsl26":0.9376,"rsl40":0.9421},{"sym":"ZBRA","sek":"Information Technology","sub":"Electronic Equipment & Instruments","preis":222.44,"rsl26":0.9368,"rsl40":0.8738},{"sym":"GILD","sek":"Health Care","sub":"Biotechnology","preis":125.87,"rsl26":0.9364,"rsl40":0.9813},{"sym":"ALB","sek":"Materials","sub":"Specialty Chemicals","preis":159.06,"rsl26":0.9357,"rsl40":1.1068},{"sym":"PSKY","sek":"Communication Services","sub":"Movies & Entertainment","preis":10.49,"rsl26":0.9357,"rsl40":0.804},{"sym":"NCLH","sek":"Consumer Discretionary","sub":"Hotels, Resorts & Cruise Lines","preis":19.06,"rsl26":0.9354,"rsl40":0.9017},{"sym":"VRSK","sek":"Industrials","sub":"Research & Consulting Services","preis":182.0,"rsl26":0.9353,"rsl40":0.8681},{"sym":"NVR","sek":"Consumer Discretionary","sub":"Homebuilding","preis":6479.7002,"rsl26":0.9347,"rsl40":0.8982},{"sym":"SCHW","sek":"Financials","sub":"Investment Banking & Brokerage","preis":88.7,"rsl26":0.9344,"rsl40":0.9409},{"sym":"IP","sek":"Materials","sub":"Paper & Plastic Packaging Products & Materials","preis":34.95,"rsl26":0.9341,"rsl40":0.8931},{"sym":"MA","sek":"Financials","sub":"Transaction & Payment Processing Services","preis":486.51,"rsl26":0.934,"rsl40":0.9076},{"sym":"MCK","sek":"Health Care","sub":"Health Care Distributors","preis":787.19,"rsl26":0.9323,"rsl40":0.9596},{"sym":"HAS","sek":"Consumer Discretionary","sub":"Leisure Products","preis":83.77,"rsl26":0.9308,"rsl40":0.9865},{"sym":"APP","sek":"Information Technology","sub":"Application Software","preis":478.57,"rsl26":0.9305,"rsl40":0.8834},{"sym":"CME","sek":"Financials","sub":"Financial Exchanges & Data","preis":262.18,"rsl26":0.9231,"rsl40":0.9512},{"sym":"AXON","sek":"Industrials","sub":"Aerospace & Defense","preis":446.2,"rsl26":0.9206,"rsl40":0.8073},{"sym":"MSFT","sek":"Information Technology","sub":"Systems Software","preis":390.34,"rsl26":0.9205,"rsl40":0.8628},{"sym":"VST","sek":"Utilities","sub":"Electric Utilities","preis":146.38,"rsl26":0.9196,"rsl40":0.8567},{"sym":"TPL","sek":"Energy","sub":"Oil & Gas Exploration & Production","preis":369.55,"rsl26":0.9189,"rsl40":1.0013},{"sym":"TAP","sek":"Consumer Staples","sub":"Brewers","preis":40.93,"rsl26":0.9178,"rsl40":0.9144},{"sym":"MLM","sek":"Materials","sub":"Construction Materials","preis":565.54,"rsl26":0.9156,"rsl40":0.9167},{"sym":"HSY","sek":"Consumer Staples","sub":"Packaged Foods & Meats","preis":180.84,"rsl26":0.9155,"rsl40":0.9445},{"sym":"EXPE","sek":"Consumer Discretionary","sub":"Hotels, Resorts & Cruise Lines","preis":224.66,"rsl26":0.9139,"rsl40":0.9394},{"sym":"COO","sek":"Health Care","sub":"Health Care Supplies","preis":67.51,"rsl26":0.9133,"rsl40":0.9284},{"sym":"AVY","sek":"Materials","sub":"Paper & Plastic Packaging Products & Materials","preis":158.75,"rsl26":0.9131,"rsl40":0.9287},{"sym":"CRH","sek":"Materials","sub":"Construction Materials","preis":104.83,"rsl26":0.9103,"rsl40":0.9124},{"sym":"TMO","sek":"Health Care","sub":"Life Sciences Tools & Services","preis":475.66,"rsl26":0.9102,"rsl40":0.9047},{"sym":"SPGI","sek":"Financials","sub":"Financial Exchanges & Data","preis":413.34,"rsl26":0.9099,"rsl40":0.8795},{"sym":"UBER","sek":"Industrials","sub":"Passenger Ground Transportation","preis":69.55,"rsl26":0.9076,"rsl40":0.8414},{"sym":"TSN","sek":"Consumer Staples","sub":"Packaged Foods & Meats","preis":55.64,"rsl26":0.9046,"rsl40":0.9519},{"sym":"LOW","sek":"Consumer Discretionary","sub":"Home Improvement Retail","preis":221.05,"rsl26":0.9021,"rsl40":0.9034},{"sym":"IDXX","sek":"Health Care","sub":"Health Care Equipment","preis":557.91,"rsl26":0.9007,"rsl40":0.8792},{"sym":"ROP","sek":"Information Technology","sub":"Electronic Equipment & Instruments","preis":332.71,"rsl26":0.9002,"rsl40":0.8131},{"sym":"NFLX","sek":"Communication Services","sub":"Movies & Entertainment","preis":81.27,"rsl26":0.9,"rsl40":0.8174},{"sym":"CVNA","sek":"Consumer Discretionary","sub":"Automotive Retail","preis":67.82,"rsl26":0.8995,"rsl40":0.92},{"sym":"GPN","sek":"Financials","sub":"Transaction & Payment Processing Services","preis":65.44,"rsl26":0.8991,"rsl40":0.8607},{"sym":"LVS","sek":"Consumer Discretionary","sub":"Casinos & Gaming","preis":50.61,"rsl26":0.8984,"rsl40":0.8966},{"sym":"BKNG","sek":"Consumer Discretionary","sub":"Hotels, Resorts & Cruise Lines","preis":163.59,"rsl26":0.8983,"rsl40":0.856},{"sym":"KKR","sek":"Financials","sub":"Asset Management & Custody Banks","preis":95.3,"rsl26":0.8983,"rsl40":0.8397},{"sym":"SYK","sek":"Health Care","sub":"Health Care Equipment","preis":305.64,"rsl26":0.8965,"rsl40":0.8695},{"sym":"T","sek":"Communication Services","sub":"Integrated Telecommunication Services","preis":23.0,"rsl26":0.8964,"rsl40":0.8909},{"sym":"META","sek":"Communication Services","sub":"Interactive Media & Services","preis":568.43,"rsl26":0.8938,"rsl40":0.8634},{"sym":"MDT","sek":"Health Care","sub":"Health Care Equipment","preis":80.33,"rsl26":0.8935,"rsl40":0.88},{"sym":"DHR","sek":"Health Care","sub":"Life Sciences Tools & Services","preis":180.79,"rsl26":0.8931,"rsl40":0.8846},{"sym":"GPC","sek":"Consumer Discretionary","sub":"Distributors","preis":102.26,"rsl26":0.8923,"rsl40":0.8534},{"sym":"EQT","sek":"Energy","sub":"Oil & Gas Exploration & Production","preis":51.2,"rsl26":0.8917,"rsl40":0.9091},{"sym":"FICO","sek":"Information Technology","sub":"Application Software","preis":1185.37,"rsl26":0.8915,"rsl40":0.8244},{"sym":"VLTO","sek":"Industrials","sub":"Environmental & Facilities Services","preis":82.64,"rsl26":0.8913,"rsl40":0.8585},{"sym":"CBRE","sek":"Real Estate","sub":"Real Estate Services","preis":131.91,"rsl26":0.8902,"rsl40":0.8702},{"sym":"ALLE","sek":"Industrials","sub":"Building Products","preis":133.71,"rsl26":0.8893,"rsl40":0.8499},{"sym":"COF","sek":"Financials","sub":"Consumer Finance","preis":182.04,"rsl26":0.888,"rsl40":0.8719},{"sym":"CMG","sek":"Consumer Discretionary","sub":"Restaurants","preis":31.25,"rsl26":0.887,"rsl40":0.8664},{"sym":"ERIE","sek":"Financials","sub":"Insurance Brokers","preis":226.01,"rsl26":0.8868,"rsl40":0.8255},{"sym":"WTW","sek":"Financials","sub":"Insurance Brokers","preis":260.79,"rsl26":0.8847,"rsl40":0.8518},{"sym":"STE","sek":"Health Care","sub":"Health Care Equipment","preis":207.22,"rsl26":0.8841,"rsl40":0.8677},{"sym":"IR","sek":"Industrials","sub":"Industrial Machinery & Supplies & Components","preis":73.2,"rsl26":0.884,"rsl40":0.8985},{"sym":"DG","sek":"Consumer Staples","sub":"Consumer Staples Merchandise Retail","preis":114.34,"rsl26":0.8836,"rsl40":0.9526},{"sym":"AZO","sek":"Consumer Discretionary","sub":"Automotive Retail","preis":3081.6201,"rsl26":0.8821,"rsl40":0.8386},{"sym":"NOW","sek":"Information Technology","sub":"Systems Software","preis":103.08,"rsl26":0.8817,"rsl40":0.7427},{"sym":"NEM","sek":"Materials","sub":"Gold","preis":97.59,"rsl26":0.8798,"rsl40":0.9636},{"sym":"AOS","sek":"Industrials","sub":"Building Products","preis":58.66,"rsl26":0.8794,"rsl40":0.8722},{"sym":"POOL","sek":"Consumer Discretionary","sub":"Distributors","preis":192.34,"rsl26":0.8767,"rsl40":0.7966},{"sym":"NOC","sek":"Industrials","sub":"Aerospace & Defense","preis":552.52,"rsl26":0.8757,"rsl40":0.9021},{"sym":"MTD","sek":"Health Care","sub":"Life Sciences Tools & Services","preis":1141.25,"rsl26":0.8756,"rsl40":0.8653},{"sym":"ICE","sek":"Financials","sub":"Financial Exchanges & Data","preis":138.98,"rsl26":0.873,"rsl40":0.8715},{"sym":"BRO","sek":"Financials","sub":"Insurance Brokers","preis":59.95,"rsl26":0.8718,"rsl40":0.7961},{"sym":"COR","sek":"Health Care","sub":"Health Care Distributors","preis":281.48,"rsl26":0.8678,"rsl40":0.8688},{"sym":"XYL","sek":"Industrials","sub":"Industrial Machinery & Supplies & Components","preis":109.05,"rsl26":0.8676,"rsl40":0.8272},{"sym":"GEHC","sek":"Health Care","sub":"Health Care Equipment","preis":64.51,"rsl26":0.8644,"rsl40":0.8618},{"sym":"CPRT","sek":"Industrials","sub":"Diversified Support Services","preis":31.06,"rsl26":0.8633,"rsl40":0.7995},{"sym":"CMCSA","sek":"Communication Services","sub":"Cable & Satellite","preis":23.97,"rsl26":0.8606,"rsl40":0.866},{"sym":"PLTR","sek":"Information Technology","sub":"Application Software","preis":131.08,"rsl26":0.8584,"rsl40":0.8163},{"sym":"VEEV","sek":"Health Care","sub":"Health Care Technology","preis":161.55,"rsl26":0.8552,"rsl40":0.7306},{"sym":"OTIS","sek":"Industrials","sub":"Industrial Machinery & Supplies & Components","preis":70.13,"rsl26":0.8532,"rsl40":0.8314},{"sym":"CAG","sek":"Consumer Staples","sub":"Packaged Foods & Meats","preis":13.45,"rsl26":0.8499,"rsl40":0.8247},{"sym":"NKE","sek":"Consumer Discretionary","sub":"Apparel, Accessories & Luxury Goods","preis":45.96,"rsl26":0.8497,"rsl40":0.7839},{"sym":"GIS","sek":"Consumer Staples","sub":"Packaged Foods & Meats","preis":33.82,"rsl26":0.8477,"rsl40":0.7993},{"sym":"ABT","sek":"Health Care","sub":"Health Care Equipment","preis":89.65,"rsl26":0.8473,"rsl40":0.7886},{"sym":"EXE","sek":"Energy","sub":"Oil & Gas Exploration & Production","preis":87.08,"rsl26":0.8464,"rsl40":0.8419},{"sym":"MKC","sek":"Consumer Staples","sub":"Packaged Foods & Meats","preis":49.23,"rsl26":0.8461,"rsl40":0.8105},{"sym":"DASH","sek":"Consumer Discretionary","sub":"Specialized Consumer Services","preis":154.59,"rsl26":0.8453,"rsl40":0.7563},{"sym":"PYPL","sek":"Financials","sub":"Transaction & Payment Processing Services","preis":41.24,"rsl26":0.8417,"rsl40":0.747},{"sym":"MOS","sek":"Materials","sub":"Fertilizers & Agricultural Chemicals","preis":21.09,"rsl26":0.8415,"rsl40":0.7949},{"sym":"ISRG","sek":"Health Care","sub":"Health Care Equipment","preis":412.9,"rsl26":0.841,"rsl40":0.8388},{"sym":"WDAY","sek":"Information Technology","sub":"Application Software","preis":130.53,"rsl26":0.8385,"rsl40":0.7163},{"sym":"EFX","sek":"Industrials","sub":"Research & Consulting Services","preis":159.58,"rsl26":0.8362,"rsl40":0.7812},{"sym":"REGN","sek":"Health Care","sub":"Biotechnology","preis":611.48,"rsl26":0.8317,"rsl40":0.8803},{"sym":"DPZ","sek":"Consumer Discretionary","sub":"Restaurants","preis":312.26,"rsl26":0.8316,"rsl40":0.7982},{"sym":"ROL","sek":"Industrials","sub":"Environmental & Facilities Services","preis":47.05,"rsl26":0.8293,"rsl40":0.8273},{"sym":"RMD","sek":"Health Care","sub":"Health Care Equipment","preis":192.39,"rsl26":0.8248,"rsl40":0.79},{"sym":"IT","sek":"Information Technology","sub":"IT Consulting & Other Services","preis":148.81,"rsl26":0.8203,"rsl40":0.7324},{"sym":"BLDR","sek":"Industrials","sub":"Building Products","preis":78.57,"rsl26":0.8182,"rsl40":0.7478},{"sym":"CRM","sek":"Information Technology","sub":"Application Software","preis":166.45,"rsl26":0.8164,"rsl40":0.7654},{"sym":"ULTA","sek":"Consumer Discretionary","sub":"Other Specialty Retail","preis":476.42,"rsl26":0.8148,"rsl40":0.8429},{"sym":"ADSK","sek":"Information Technology","sub":"Application Software","preis":205.57,"rsl26":0.8135,"rsl40":0.7549},{"sym":"CEG","sek":"Utilities","sub":"Electric Utilities","preis":246.71,"rsl26":0.8105,"rsl40":0.7719},{"sym":"NRG","sek":"Utilities","sub":"Independent Power Producers & Energy Traders","preis":123.7,"rsl26":0.81,"rsl40":0.792},{"sym":"TYL","sek":"Information Technology","sub":"Application Software","preis":295.48,"rsl26":0.8077,"rsl40":0.7126},{"sym":"HII","sek":"Industrials","sub":"Aerospace & Defense","preis":300.95,"rsl26":0.8074,"rsl40":0.8771},{"sym":"HCA","sek":"Health Care","sub":"Health Care Facilities","preis":378.51,"rsl26":0.8032,"rsl40":0.8225},{"sym":"BR","sek":"Industrials","sub":"Data Processing & Outsourced Services","preis":144.86,"rsl26":0.8002,"rsl40":0.7277},{"sym":"COIN","sek":"Financials","sub":"Financial Exchanges & Data","preis":160.43,"rsl26":0.7989,"rsl40":0.6639},{"sym":"ADBE","sek":"Information Technology","sub":"Application Software","preis":218.8,"rsl26":0.794,"rsl40":0.7316},{"sym":"PNR","sek":"Industrials","sub":"Industrial Machinery & Supplies & Components","preis":72.57,"rsl26":0.7903,"rsl40":0.7454},{"sym":"GDDY","sek":"Information Technology","sub":"Internet Services & Infrastructure","preis":75.17,"rsl26":0.7835,"rsl40":0.6842},{"sym":"JKHY","sek":"Financials","sub":"Transaction & Payment Processing Services","preis":125.96,"rsl26":0.777,"rsl40":0.7864},{"sym":"CTSH","sek":"Information Technology","sub":"IT Consulting & Other Services","preis":51.18,"rsl26":0.7723,"rsl40":0.7593},{"sym":"PTC","sek":"Information Technology","sub":"Application Software","preis":118.39,"rsl26":0.7704,"rsl40":0.7021},{"sym":"ACN","sek":"Information Technology","sub":"IT Consulting & Other Services","preis":167.52,"rsl26":0.7702,"rsl40":0.7379},{"sym":"UHS","sek":"Health Care","sub":"Health Care Facilities","preis":146.05,"rsl26":0.7563,"rsl40":0.7365},{"sym":"FIS","sek":"Financials","sub":"Transaction & Payment Processing Services","preis":38.35,"rsl26":0.7489,"rsl40":0.687},{"sym":"LDOS","sek":"Industrials","sub":"Diversified Support Services","preis":122.08,"rsl26":0.7419,"rsl40":0.7077},{"sym":"TRMB","sek":"Information Technology","sub":"Application Software","preis":50.0,"rsl26":0.7354,"rsl40":0.6931},{"sym":"LULU","sek":"Consumer Discretionary","sub":"Apparel, Accessories & Luxury Goods","preis":121.84,"rsl26":0.73,"rsl40":0.7184},{"sym":"ZTS","sek":"Health Care","sub":"Pharmaceuticals","preis":81.4,"rsl26":0.7195,"rsl40":0.6686},{"sym":"CHTR","sek":"Communication Services","sub":"Cable & Satellite","preis":139.14,"rsl26":0.6991,"rsl40":0.6477},{"sym":"TSCO","sek":"Consumer Discretionary","sub":"Other Specialty Retail","preis":31.26,"rsl26":0.6983,"rsl40":0.6447},{"sym":"TTD","sek":"Communication Services","sub":"Advertising","preis":18.9,"rsl26":0.6866,"rsl40":0.5463},{"sym":"CSGP","sek":"Real Estate","sub":"Real Estate Services","preis":32.65,"rsl26":0.6834,"rsl40":0.56},{"sym":"PODD","sek":"Health Care","sub":"Health Care Equipment","preis":149.19,"rsl26":0.659,"rsl40":0.5712},{"sym":"BSX","sek":"Health Care","sub":"Health Care Equipment","preis":47.17,"rsl26":0.6449,"rsl40":0.5704},{"sym":"INTU","sek":"Information Technology","sub":"Application Software","preis":276.91,"rsl26":0.5998,"rsl40":0.5216}];
+const SEED = [{"datum": "2026-04-27", "typ": "kauf", "symbol": "LITE", "anteile": 1.0, "kurs": 746.4, "notiz": "Buffer-Einstieg Q2-Rebalancing"}, {"datum": "2026-04-27", "typ": "kauf", "symbol": "CIEN", "anteile": 1.67, "kurs": 446.9, "notiz": "Buffer-Einstieg Q2-Rebalancing"}, {"datum": "2026-04-27", "typ": "kauf", "symbol": "COHR", "anteile": 2.61, "kurs": 285.0, "notiz": "Buffer-Einstieg Q2-Rebalancing"}, {"datum": "2026-04-27", "typ": "kauf", "symbol": "WDC", "anteile": 2.12, "kurs": 352.1, "notiz": "Buffer-Einstieg Q2-Rebalancing"}, {"datum": "2026-04-27", "typ": "kauf", "symbol": "STX", "anteile": 1.45, "kurs": 514.0, "notiz": "Buffer-Einstieg Q2-Rebalancing"}];
+const EURUSD = 1.1709;
+const PRICE = {}; RANKING.forEach(d=>PRICE[d.sym]=d.preis); // USD-Kurse 12.06.2026
+
+const tabs=document.querySelectorAll('nav.tabs button');
+const views={signal:document.getElementById('v-signal'),ranking:document.getElementById('v-ranking'),journal:document.getElementById('v-journal'),kurz:document.getElementById('v-kurz'),doku:document.getElementById('v-doku')};
+tabs.forEach(b=>b.addEventListener('click',()=>{
+ tabs.forEach(x=>x.classList.remove('on'));b.classList.add('on');
+ Object.values(views).forEach(v=>v.classList.remove('active'));
+ views[b.dataset.v].classList.add('active');
+ document.getElementById('hdr-title').textContent=b.dataset.t;window.scrollTo(0,0);
+}));
+
+(function(){
+ const target=new Date(2026,5,26,20,0,0);
+ function upd(){const ms=target-new Date();const el=document.getElementById('cd-num');
+  if(ms<=0){el.innerHTML='jetzt';return;}
+  const d=Math.floor(ms/86400000),h=Math.floor(ms%86400000/3600000);
+  el.innerHTML=d>0?`${d}<small> Tg</small> ${h}<small> Std</small>`:`${h}<small> Std</small>`;}
+ upd();setInterval(upd,60000);
+})();
+
+/* Ranking */
+let rLimit=20;
+const rlist=document.getElementById('rlist'),rcount=document.getElementById('rcount'),rsearch=document.getElementById('rsearch');
+function fmtRsl(v){return v.toFixed(3).replace('.',',');}
+function eur(v){return v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';}
+function fmtPr(v){return v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' $';}
+function pct(v){return (v>=0?'+':'')+v.toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1})+' %';}
+function renderRanking(){
+ const q=rsearch.value.trim().toLowerCase();
+ let data=RANKING.map((d,i)=>({...d,rank:i+1}));
+ if(q) data=data.filter(d=>d.sym.toLowerCase().includes(q)||d.sek.toLowerCase().includes(q)||d.sub.toLowerCase().includes(q));
+ const shown=data.slice(0,rLimit);
+ rlist.innerHTML=shown.map(d=>{const cand=d.rank<=5?' cand':'';
+  return `<div class="pos"><div class="rk${cand}">${d.rank}</div><div class="meta"><div class="tk">${d.sym}</div><div class="nm">${d.sek}</div></div><div class="rt"><div class="rsl">${fmtRsl(d.rsl26)}</div><div class="pr">${fmtPr(d.preis)}</div></div></div>`;
+ }).join('') || '<div class="empty">Kein Treffer.</div>';
+ rcount.textContent=`${Math.min(rLimit,data.length)} von ${data.length} Titeln · RSL = Kurs / SMA(26W) · Rang ≤ 5 = Kaufkandidat`;
+}
+document.querySelectorAll('#rseg button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#rseg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');rLimit=+b.dataset.n;renderRanking();}));
+rsearch.addEventListener('input',renderRanking);renderRanking();
+
+/* Journal + Performance */
+const KEY='rsl_journal_v1';
+function load(){try{const v=localStorage.getItem(KEY);if(v)return JSON.parse(v);}catch(e){}localStorage.setItem(KEY,JSON.stringify(SEED));return [...SEED];}
+function save(e){localStorage.setItem(KEY,JSON.stringify(e));}
+let entries=load();
+const jlist=document.getElementById('jlist');
+function deDate(iso){if(!iso)return'–';const[y,m,d]=iso.split('-');return`${d}.${m}.${y}`;}
+
+function renderPerf(){
+ const pos={};
+ entries.forEach(e=>{if(!e.symbol||!(e.typ==='kauf'||e.typ==='verkauf'))return;
+  const s=e.symbol.toUpperCase();pos[s]=pos[s]||{shares:0,cost:0};
+  const vol=(e.anteile||0)*(e.kurs||0);
+  if(e.typ==='kauf'){pos[s].shares+=(e.anteile||0);pos[s].cost+=vol;}
+  else{pos[s].shares-=(e.anteile||0);pos[s].cost-=vol;}});
+ let invest=0,value=0,rows=[],unpriced=[];
+ Object.keys(pos).forEach(s=>{const p=pos[s];if(p.shares<=0.0001)return;
+  if(PRICE[s]==null){unpriced.push(s);return;}
+  const valEur=p.shares*PRICE[s]/EURUSD;
+  invest+=p.cost;value+=valEur;
+  const gv=valEur-p.cost,r=p.cost>0?gv/p.cost*100:0;
+  rows.push({s,r,gv});});
+ rows.sort((a,b)=>b.r-a.r);
+ const el=document.getElementById('perf');
+ if(!rows.length){el.innerHTML='<div class="empty">Keine bewertbaren Positionen.</div>';return;}
+ const gvTot=value-invest,rTot=invest>0?gvTot/invest*100:0;
+ const cls=gvTot>=0?'up':'down';
+ let html=`<div class="perf-hd"><div class="pct ${cls}">${pct(rTot)}</div><div class="eur ${cls}">${gvTot>=0?'+':''}${eur(gvTot)}</div></div>
+  <div class="perf-grid"><div class="b"><div class="v">${eur(invest)}</div><div class="l">Investiert</div></div><div class="b"><div class="v">${eur(value)}</div><div class="l">Aktueller Wert</div></div></div>
+  <div style="margin-top:12px">`;
+ rows.forEach(x=>{const c=x.r>=0?'up':'down';html+=`<div class="prow"><span class="l">${x.s}</span><span><b class="${c}">${pct(x.r)}</b> &nbsp;<span class="${c}">${x.gv>=0?'+':''}${eur(x.gv)}</span></span></div>`;});
+ html+='</div>';
+ if(unpriced.length)html+=`<p class="note" style="margin-bottom:0">Ohne aktuellen Kurs (nicht im Universum): ${unpriced.join(', ')}</p>`;
+ el.innerHTML=html;
+}
+function renderJournal(){
+ const s=[...entries].sort((a,b)=>(b.datum||'').localeCompare(a.datum||''));
+ document.getElementById('k-count').textContent=entries.length;
+ document.getElementById('k-open').textContent=entries.filter(e=>e.typ==='kauf').length;
+ document.getElementById('k-last').textContent=s[0]?deDate(s[0].datum).slice(0,5):'–';
+ if(!entries.length){jlist.innerHTML='<div class="empty">Noch keine Einträge.</div>';renderPerf();return;}
+ jlist.innerHTML=s.map(e=>{const idx=entries.indexOf(e);
+  const vol=(e.anteile&&e.kurs)?` · ${eur(e.anteile*e.kurs)}`:'';
+  const det=(e.anteile||e.kurs)?`<div class="det">${e.anteile||0} × ${(e.kurs||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})} €${vol}</div>`:'';
+  return `<div class="jentry"><button class="del" data-i="${idx}">×</button><div class="top"><div><div class="tk">${e.symbol||'(Notiz)'}</div><div class="dt">${deDate(e.datum)}</div></div><span class="ty ${e.typ}">${e.typ}</span></div>${det}${e.notiz?`<div class="nz">${e.notiz.replace(/</g,'&lt;')}</div>`:''}</div>`;
+ }).join('');
+ jlist.querySelectorAll('.del').forEach(b=>b.addEventListener('click',()=>{if(confirm('Eintrag löschen?')){entries.splice(+b.dataset.i,1);save(entries);renderJournal();}}));
+ renderPerf();
+}
+document.getElementById('f-datum').value=new Date().toISOString().slice(0,10);
+document.getElementById('jsave').addEventListener('click',()=>{
+ const g=id=>document.getElementById(id).value;
+ const sym=g('f-symbol').trim().toUpperCase(),nz=g('f-notiz').trim();
+ if(!sym&&!nz){alert('Bitte mindestens Symbol oder Notiz angeben.');return;}
+ entries.push({datum:g('f-datum')||new Date().toISOString().slice(0,10),typ:g('f-typ'),symbol:sym,anteile:parseFloat(g('f-anteile'))||0,kurs:parseFloat(g('f-kurs'))||0,fee:parseFloat(g('f-fee'))||0,notiz:nz});
+ save(entries);['f-symbol','f-anteile','f-kurs','f-fee','f-notiz'].forEach(id=>document.getElementById(id).value='');renderJournal();
+});
+document.getElementById('jexport').addEventListener('click',()=>{
+ const head='Datum;Typ;Symbol;Anteile;Kurs_EUR;Volumen_EUR;Gebuehr_EUR;Notiz';
+ const lines=entries.map(e=>[e.datum,e.typ,e.symbol,e.anteile,e.kurs,((e.anteile||0)*(e.kurs||0)).toFixed(2),e.fee||0,'"'+(e.notiz||'').replace(/"/g,'""')+'"'].join(';'));
+ const blob=new Blob([head+'\n'+lines.join('\n')],{type:'text/csv'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='rsl_journal.csv';a.click();
+});
+renderJournal();
+
+document.querySelectorAll('.doc table').forEach(t=>{const w=document.createElement('div');w.className='tw';t.parentNode.insertBefore(w,t);w.appendChild(t);});
+</script>
+</body>
+</html>

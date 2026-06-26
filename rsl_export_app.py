@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
-"""RSL Export — Web-App (Streamlit Community Cloud / iPhone).
+"""RSL Strategie — Web-App (Streamlit Community Cloud / iPhone).
 
-Nachbau der lokalen rsl_app.py (B5-Buffer-Ansicht), aber vollständig
-eigenständig (keine lokalen Pfade) und damit cloud-deploybar.
-Lädt live S&P-500-Kurse via yfinance, berechnet RSL (Tagesschluss,
-SMA 130/200 HT) wie RSL_Update.py, Schock-Filter + Regime-Ampel +
-Ziel-Depot mit Sektor-Cap, Top-20-Ranking und Excel-Download.
+Eine private Adresse, zwei Ansichten:
+  • RSL Export (live): lädt S&P-500-Kurse via yfinance, Schock-Filter,
+    Ziel-Depot mit Sektor-Cap, Regime-Ampel, Top 20, Excel-Download.
+  • Strategie-App: die komplette 5-Tab-App (Signal/Ranking/Journal/Kurz/Doku),
+    eingebettet aus RSL_Strategie_App.html (Journal speichert im Browser).
+Vollständig eigenständig — keine lokalen Pfade, cloud-deploybar.
 """
-import datetime, io, warnings
+import datetime, io, os, warnings
 warnings.filterwarnings("ignore")
 import pandas as pd
 import numpy as np
 import streamlit as st
+import streamlit.components.v1 as components
 import yfinance as yf
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -22,9 +24,10 @@ SCHOCK_TAGE = 5
 SEKTOR_CAP = 2        # max. Titel je Sektor in den Top-3
 JUMP_MAX = 0.40       # Artefakt-Filter: > 40 % Ein-Tages-Sprung
 
-st.set_page_config(page_title="RSL Export", page_icon="📈", layout="centered")
+st.set_page_config(page_title="RSL Strategie", page_icon="📈", layout="centered")
 
 
+# ══ Daten/Logik ════════════════════════════════════════════════════════════════
 @st.cache_data(show_spinner=False)
 def lade_universum() -> pd.DataFrame:
     return pd.read_csv("sp500_universe.csv")
@@ -43,7 +46,6 @@ def lade_alles():
     except Exception:
         fx = 1.17
 
-    # Aktienkurse
     closes = {}
     BATCH = 120
     for i in range(0, len(symbole), BATCH):
@@ -84,7 +86,6 @@ def lade_alles():
           .sort_values("RSL_26W", ascending=False).reset_index(drop=True))
     df.insert(0, "Rang", df.index + 1)
 
-    # Schock-Filter / Regime aus ^GSPC
     try:
         close = yf.download("^GSPC", period="350d", auto_adjust=True,
                             progress=False)["Close"].dropna()
@@ -159,75 +160,96 @@ def baue_excel(df, fx):
     buf = io.BytesIO(); wb.save(buf); return buf.getvalue()
 
 
-# ══ UI ════════════════════════════════════════════════════════════════════════
-st.markdown("# 📈 RSL Export")
-st.caption(f"Stand: {datetime.datetime.now().strftime('%d.%m.%Y %H:%M')} Uhr")
+# ══ Ansicht 1: RSL Export (live) ════════════════════════════════════════════════
+def view_export():
+    st.markdown("# 📈 RSL Export")
+    st.caption(f"Stand: {datetime.datetime.now().strftime('%d.%m.%Y %H:%M')} Uhr")
 
-if st.button("🔄 Daten jetzt aktualisieren", use_container_width=True, type="primary"):
-    lade_alles.clear()
+    if st.button("🔄 Daten jetzt aktualisieren", use_container_width=True, type="primary"):
+        lade_alles.clear()
 
-with st.spinner("Lade S&P-500-Daten von Yahoo Finance … (kann 1–2 Minuten dauern)"):
-    df, fx, artefakte, schock = lade_alles()
+    with st.spinner("Lade S&P-500-Daten von Yahoo Finance … (kann 1–2 Minuten dauern)"):
+        df, fx, artefakte, schock = lade_alles()
 
-# ── Schock-Filter-Banner ──────────────────────────────────────────────────────
-if schock.get("aktiv"):
-    st.error(f"🚨 **SCHOCK-FILTER AKTIV** — S&P 500 5T-Rendite: {schock['r5t_pct']} %  |  "
-             "B5-Buffer: ALLE Positionen sofort verkaufen!")
+    if schock.get("aktiv"):
+        st.error(f"🚨 **SCHOCK-FILTER AKTIV** — S&P 500 5T-Rendite: {schock['r5t_pct']} %  |  "
+                 "B5-Buffer: ALLE Positionen sofort verkaufen!")
+    else:
+        farbe = {"Bullish": "🟢", "Neutral": "🟡", "Bearish": "🔴"}.get(schock.get("regime", ""), "⚪")
+        st.info(f"✅ Schock-Filter inaktiv  |  S&P 500: ${schock.get('kurs', 0):,.2f}  |  "
+                f"{farbe} Regime: **{schock.get('regime', '?')}**  |  5T-Rendite: {schock.get('r5t_pct', '?')} %")
+
+    st.success(f"✅ {len(df)} Aktien mit gültigem RSL geladen  ·  Stand {datetime.date.today().strftime('%d.%m.%Y')}")
+    st.write("")
+
+    st.markdown(f"### 🎯 B5-Buffer (26W · Top 3 · halten solange Rang ≤ 5 · max. {SEKTOR_CAP}/Sektor)")
+    ampel = regime_ampel(df)
+    if ampel:
+        st.markdown(f"**{ampel['symbol']} Regime-Ampel: {ampel['status']}** · "
+                    f"Dispersion {ampel['disp']} (🟢 ≥ 0,45 · 🔴 < 0,35) — {ampel['hinweis']}")
+
+    colb1, colb2 = st.columns(2)
+    with colb1:
+        exb = df[(df["RSL_26W"] > 0.01) & (df["RSL_26W"] < 5.0)].nlargest(60, "RSL_26W").reset_index(drop=True)
+        kauf, cap_skips = ziel_depot_mit_cap(exb, n=3)
+        puffer = [t for t in exb.iloc[3:5]["Symbol"].tolist() if t not in kauf]
+        st.markdown(f"**🟢 Ziel-Depot (max. {SEKTOR_CAP}/Sektor):** `{'  ·  '.join(kauf)}`")
+        if puffer:
+            st.markdown(f"**🟡 Halte-Puffer (Rang 4–5):** `{'  ·  '.join(puffer)}`")
+        if cap_skips:
+            st.markdown(f"**⛔ Sektor-Cap übersprungen:** `{'  ·  '.join(cap_skips[:5])}`")
+        st.caption("Halten solange Rang ≤ 5, sonst verkaufen und durch den bestplatzierten "
+                   f"freien Titel ersetzen (max. {SEKTOR_CAP} je Sektor). Prüfung quartalsweise "
+                   "(letzter Handels-Freitag, 20:00 Uhr); bei 🟢 Ampel optional wöchentlich.")
+    with colb2:
+        st.download_button("📊 Top 20 + Ranking als Excel", baue_excel(df, fx),
+                           file_name=f"RSL_Top20_{datetime.date.today()}.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                           use_container_width=True)
+        st.download_button("⬇️ Gesamtranking als CSV",
+                           df.drop(columns=["Preis_EUR"]).to_csv(index=False).encode("utf-8"),
+                           file_name=f"rsl_export_{datetime.date.today()}.csv",
+                           mime="text/csv", use_container_width=True)
+
+    st.markdown("### 📊 Top 20 nach RSL (26W)")
+    top = df.head(20)[["Rang", "Symbol", "Sektor", "RSL_26W", "Preis_USD", "Preis_EUR"]].copy()
+    top.columns = ["Rang", "Ticker", "Sektor", "RSL 26W", "Kurs USD", "Kurs EUR"]
+    st.dataframe(top, hide_index=True, use_container_width=True,
+                 column_config={
+                     "RSL 26W": st.column_config.NumberColumn(format="%.3f"),
+                     "Kurs USD": st.column_config.NumberColumn(format="%.2f"),
+                     "Kurs EUR": st.column_config.NumberColumn(format="%.2f"),
+                 })
+
+    with st.expander(f"📁 Gesamtranking ({len(df)} Titel) anzeigen"):
+        st.dataframe(df[["Rang", "Symbol", "Sektor", "Branche", "RSL_26W", "Preis_USD", "Preis_EUR"]],
+                     hide_index=True, use_container_width=True)
+
+    if artefakte:
+        st.caption("Aussortierte Kursartefakte (Split/Spin-off-Sprung > 40 %/Tag): " + ", ".join(artefakte))
+    st.caption(f"RSL_26W = Kurs / SMA(130 Handelstage) · EUR/USD {fx:.4f} · Quelle yfinance · "
+               "Stichtagsbetrachtung ohne Depotkenntnis · keine Anlageberatung.")
+
+
+# ══ Ansicht 2: Strategie-App (eingebettete HTML) ════════════════════════════════
+def view_strategie():
+    pfad = os.path.join(os.path.dirname(os.path.abspath(__file__)), "RSL_Strategie_App.html")
+    try:
+        with open(pfad, encoding="utf-8") as f:
+            html = f.read()
+    except Exception:
+        with open("RSL_Strategie_App.html", encoding="utf-8") as f:
+            html = f.read()
+    components.html(html, height=860, scrolling=True)
+
+
+# ══ Navigation ══════════════════════════════════════════════════════════════════
+st.sidebar.title("📈 RSL Strategie")
+ansicht = st.sidebar.radio("Ansicht", ["📊 RSL Export (live)", "📱 Strategie-App"])
+st.sidebar.caption("Live-Export lädt aktuelle Kurse. Strategie-App = Signal, Ranking, "
+                   "Journal, Kurz, Doku (Journal speichert im Browser).")
+
+if ansicht == "📊 RSL Export (live)":
+    view_export()
 else:
-    farbe = {"Bullish": "🟢", "Neutral": "🟡", "Bearish": "🔴"}.get(schock.get("regime", ""), "⚪")
-    st.info(f"✅ Schock-Filter inaktiv  |  S&P 500: ${schock.get('kurs', 0):,.2f}  |  "
-            f"{farbe} Regime: **{schock.get('regime', '?')}**  |  5T-Rendite: {schock.get('r5t_pct', '?')} %")
-
-st.success(f"✅ {len(df)} Aktien mit gültigem RSL geladen  ·  Stand {datetime.date.today().strftime('%d.%m.%Y')}")
-st.write("")
-
-# ── B5-Buffer ─────────────────────────────────────────────────────────────────
-st.markdown(f"### 🎯 B5-Buffer (26W · Top 3 · halten solange Rang ≤ 5 · max. {SEKTOR_CAP}/Sektor)")
-
-ampel = regime_ampel(df)
-if ampel:
-    st.markdown(f"**{ampel['symbol']} Regime-Ampel: {ampel['status']}** · "
-                f"Dispersion {ampel['disp']} (🟢 ≥ 0,45 · 🔴 < 0,35) — {ampel['hinweis']}")
-
-colb1, colb2 = st.columns(2)
-with colb1:
-    exb = df[(df["RSL_26W"] > 0.01) & (df["RSL_26W"] < 5.0)].nlargest(60, "RSL_26W").reset_index(drop=True)
-    kauf, cap_skips = ziel_depot_mit_cap(exb, n=3)
-    puffer = [t for t in exb.iloc[3:5]["Symbol"].tolist() if t not in kauf]
-    st.markdown(f"**🟢 Ziel-Depot (max. {SEKTOR_CAP}/Sektor):** `{'  ·  '.join(kauf)}`")
-    if puffer:
-        st.markdown(f"**🟡 Halte-Puffer (Rang 4–5):** `{'  ·  '.join(puffer)}`")
-    if cap_skips:
-        st.markdown(f"**⛔ Sektor-Cap übersprungen:** `{'  ·  '.join(cap_skips[:5])}`")
-    st.caption("Halten solange Rang ≤ 5, sonst verkaufen und durch den bestplatzierten "
-               f"freien Titel ersetzen (max. {SEKTOR_CAP} je Sektor). Prüfung quartalsweise "
-               "(letzter Handels-Freitag, 20:00 Uhr); bei 🟢 Ampel optional wöchentlich.")
-with colb2:
-    st.download_button("📊 Top 20 + Ranking als Excel", baue_excel(df, fx),
-                       file_name=f"RSL_Top20_{datetime.date.today()}.xlsx",
-                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                       use_container_width=True)
-    st.download_button("⬇️ Gesamtranking als CSV",
-                       df.drop(columns=["Preis_EUR"]).to_csv(index=False).encode("utf-8"),
-                       file_name=f"rsl_export_{datetime.date.today()}.csv",
-                       mime="text/csv", use_container_width=True)
-
-# ── Top 20 ────────────────────────────────────────────────────────────────────
-st.markdown("### 📊 Top 20 nach RSL (26W)")
-top = df.head(20)[["Rang", "Symbol", "Sektor", "RSL_26W", "Preis_USD", "Preis_EUR"]].copy()
-top.columns = ["Rang", "Ticker", "Sektor", "RSL 26W", "Kurs USD", "Kurs EUR"]
-st.dataframe(top, hide_index=True, use_container_width=True,
-             column_config={
-                 "RSL 26W": st.column_config.NumberColumn(format="%.3f"),
-                 "Kurs USD": st.column_config.NumberColumn(format="%.2f"),
-                 "Kurs EUR": st.column_config.NumberColumn(format="%.2f"),
-             })
-
-with st.expander(f"📁 Gesamtranking ({len(df)} Titel) anzeigen"):
-    st.dataframe(df[["Rang", "Symbol", "Sektor", "Branche", "RSL_26W", "Preis_USD", "Preis_EUR"]],
-                 hide_index=True, use_container_width=True)
-
-if artefakte:
-    st.caption("Aussortierte Kursartefakte (Split/Spin-off-Sprung > 40 %/Tag): " + ", ".join(artefakte))
-st.caption(f"RSL_26W = Kurs / SMA(130 Handelstage) · EUR/USD {fx:.4f} · Quelle yfinance · "
-           "Stichtagsbetrachtung ohne Depotkenntnis · keine Anlageberatung.")
+    view_strategie()
